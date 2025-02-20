@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "start_task.h": "c",
+        "bsp_dwt.h": "c",
+        "mahonyahrs.h": "c"
+    }
+}
