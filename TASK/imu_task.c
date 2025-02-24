@@ -1,32 +1,5 @@
 #include "imu_task.h"
-#include "gimbal_task.h"
-// #include "cmsis_os.h"
-#include "bsp_imu.h"
-#include "pid.h"
-#include "sys_config.h"
-// #include "bsp_io.h"
-#include "math.h"
-#include "FreeRTOSConfig.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "bsp_can.h"
-#include "comm_task.h"
-#include "bmi088driver.h"
-#include "delay.h"
-#include "MahonyAHRS.h"
-// #include "IST8310.h"
-#include "filters.h"
-#include "bsp_dwt.h"
-#include "dma.h"
-#include "detect_task.h"
-#include "kalman_filter.h"
-#include "BMI088Middleware.h"
-#include "ahrs.h"
-#include "modeswitch_task.h"
-#include "filter.h"
-#include "iwdg.h"
 
-#include "stdio.h"
 
 #ifndef RAD_TO_ANGLE
 #define RAD_TO_ANGLE 57.295779513082320876798154814105f
@@ -38,6 +11,8 @@ extern TaskHandle_t imu_Task_Handle;
 volatile uint8_t imu_start_flag = 0;
 
 extern IMU_Data_t BMI088;
+
+int32_t send_data[6] = {0};
 
 float EulerAngle[3] = {0};
 
@@ -77,6 +52,9 @@ static fp32 gyro_filter[3] = {0.0f, 0.0f, 0.0f};
 fp32 INS_angle[3] = {0.0f, 0.0f, 0.0f};		  // euler angle, unit rad.??? ?? rad
 fp32 INS_angle_final[3] = {0.0f, 0.0f, 0.0f}; // 转换单位后的角度
 
+void usart_send_32bit(USART_TypeDef *USARTx, uint32_t pData[], uint16_t Size);
+void send_int32(int32_t data[], uint8_t Size);
+void send_byte(uint8_t data);
 void imu_temp_keep(void)
 {
 	PID_Struct_Init(&pid_imu_tmp, imu_pid[0], imu_pid[1], imu_pid[2], 5000, 1000, INIT);
@@ -110,7 +88,6 @@ static void imu_cali_slove(fp32 gyro[3], fp32 accel[3], fp32 mag[3], IMU_Data_t 
 
 void imu_task(void const *argu)
 {
-	u8 i_filter = 0;
 	float dt;
 	uint32_t time_last = 0;
 	uint32_t imu_wake_time = osKernelSysTick();
@@ -166,7 +143,7 @@ void imu_task(void const *argu)
 			gyro_filter[2] = Filter2(INS_gyro[2], WINDOWS);
 		}
 #else
-		gyro_filter[0] = INS_gyro[0];
+		gyro_filter[0] = INS_gyro[0]; // 加速度
 		gyro_filter[1] = INS_gyro[1];
 		gyro_filter[2] = INS_gyro[2];
 #endif
@@ -178,13 +155,48 @@ void imu_task(void const *argu)
 		INS_angle_final[1] = INS_angle[1] * RAD_TO_ANGLE;
 		INS_angle_final[2] = INS_angle[2] * RAD_TO_ANGLE;
 
-		gimbal.sensor.yaw_gyro_angle = INS_angle_final[0]; // 陀螺仪角度
-		gimbal.sensor.pit_gyro_angle = INS_angle_final[1]; // 陀螺仪角度
-		gimbal.sensor.yaw_palstance = INS_gyro[2];		   // 加速度
-		gimbal.sensor.pit_palstance = INS_gyro[1];		   // 加速度
-		
-		err_detector_hook(IMU_OFFLINE);
+		send_data[0] = INS_angle_final[0]; // YAW
+		send_data[1] = INS_angle_final[1]; // PIT
+		send_data[2] = INS_angle_final[2]; // ROL
+
+		send_data[3] = BMI088.Accel[0]; // 左右
+		send_data[4] = BMI088.Accel[1]; // 前后
+		send_data[5] = BMI088.Accel[2]; // 上下
+
+
+		send_int32(send_data, 6);
+
+		// err_detector_hook(IMU_OFFLINE);
+
 		IWDG_Feed(); // 喂狗
 		vTaskDelayUntil(&imu_wake_time, IMU_TASK_PERIOD);
+	}
+}
+
+void send_byte(uint8_t data)
+{
+	// 假设有一个函数 USART_SendData 用于发送一个字节
+	USART_SendData(USART6, data);
+}
+uint8_t test_arr[4];
+fp32 receive_test[6];
+void send_int32(int32_t data[], uint8_t Size)
+{
+	// 发送高字节到低字节
+	while (Size > 0U)
+	{
+		Size--;
+		test_arr[0] = (data[Size] >> 0) & 0xFF;
+		test_arr[1] = (data[Size] >> 8) & 0xFF;
+		test_arr[2] = (data[Size] >> 16) & 0xFF;
+		test_arr[3] = (data[Size] >> 24) & 0xFF;
+
+		receive_test[Size] = (fp32)(test_arr[0] | test_arr[1] << 8 | test_arr[2] << 16 | test_arr[3] << 24);
+		for (size_t i = 0; i < 4; i++)
+		{
+			while (USART_GetFlagStatus(USART6, USART_FLAG_TXE) == RESET)
+				;
+			send_byte(test_arr[i]);
+		}
 	}
 }

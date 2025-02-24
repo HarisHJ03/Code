@@ -740,11 +740,6 @@
               <FilePath>..\USER_CONF\tim.c</FilePath>
             </File>
             <File>
-              <FileName>sys_config.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\USER_CONF\sys_config.h</FilePath>
-            </File>
-            <File>
               <FileName>st_usb_cdc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER_CONF\st_usb_cdc.c</FilePath>
@@ -753,11 +748,6 @@
               <FileName>iwdg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER_CONF\iwdg.c</FilePath>
-            </File>
-            <File>
-              <FileName>iwdg.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\USER_CONF\iwdg.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -848,6 +838,16 @@
               <FileName>shoot2_task.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\TASK\shoot2_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>controller_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\controller_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>controller_task.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\controller_task.h</FilePath>
             </File>
           </Files>
         </Group>

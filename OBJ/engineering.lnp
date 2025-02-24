@@ -80,6 +80,7 @@
 "..\obj\pc_task.o"
 "..\obj\shoot_task.o"
 "..\obj\shoot2_task.o"
+"..\obj\controller_task.o"
 "..\obj\fuzzy_pid.o"
 "..\obj\remote_ctrl.o"
 "..\obj\keyboard.o"

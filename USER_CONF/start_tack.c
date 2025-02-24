@@ -41,48 +41,52 @@
 #include "chassis_task.h"
 #include "judge_task.h"
 #include "pc_task.h"
+#include "controller_task.h"
 
 #define START_TASK_SIZE 128
 #define START_TASK_PRIO 2
 
-#define GIMBAL_TASK_SIZE 128
-#define GIMBAL_TASK_PRIO 5
+// #define GIMBAL_TASK_SIZE 128
+// #define GIMBAL_TASK_PRIO 5
 
-#define CHASSIS_TASK_SIZE 256
-#define CHASSIS_TASK_PRIO 5
+// #define CHASSIS_TASK_SIZE 256
+// #define CHASSIS_TASK_PRIO 5
 
-#define SHOOT_TASK_SIZE 128
-#define SHOOT_TASK_PRIO 5
+// #define SHOOT_TASK_SIZE 128
+// #define SHOOT_TASK_PRIO 5
 
-#define SHOOT2_TASK_SIZE 128
-#define SHOOT2_TASK_PRIO 5
+// #define SHOOT2_TASK_SIZE 128
+// #define SHOOT2_TASK_PRIO 5
 
-#define CAN_MSG_SEND_TASK_SIZE 128
-#define CAN_MSG_SEND_TASK_PRIO 6
+// #define CAN_MSG_SEND_TASK_SIZE 128
+// #define CAN_MSG_SEND_TASK_PRIO 6
 
-#define MODE_SWITCH_TASK_SIZE 128
-#define MODE_SWITCH_TASK_PRIO 4
+// #define MODE_SWITCH_TASK_SIZE 128
+// #define MODE_SWITCH_TASK_PRIO 4
 
-#define INFO_GET_TASK_SIZE 128
-#define INFO_GET_TASK_PRIO 4
+// #define INFO_GET_TASK_SIZE 128
+// #define INFO_GET_TASK_PRIO 4
 
-#define DETECT_TASK_SIZE 128
-#define DETECT_TASK_PRIO 4
+// #define DETECT_TASK_SIZE 128
+// #define DETECT_TASK_PRIO 4
 
 #define IMU_TASK_SIZE 128
 #define IMU_TASK_PRIO 4
 
+#define CONTROLLER_TASK_SIZE 128
+#define CONTROLLER_TASK_PRIO 4
+
 #define JUDEG_TX_TASK_SIZE 256
 #define JUDEG_TX_TASK_PRIO 4
 
-#define JUDEG_RX_TASK_SIZE 256
-#define JUDEG_RX_TASK_PRIO 4
+// #define JUDEG_RX_TASK_SIZE 256
+// #define JUDEG_RX_TASK_PRIO 4
 
-#define PC_TX_TASK_SIZE 256
-#define PC_TX_TASK_PRIO 4
+// #define PC_TX_TASK_SIZE 256
+// #define PC_TX_TASK_PRIO 4
 
-#define PC_RX_TASK_SIZE 256
-#define PC_RX_TASK_PRIO 4
+// #define PC_RX_TASK_SIZE 256
+// #define PC_RX_TASK_PRIO 4
 
 TaskHandle_t start_Task_Handle;
 TaskHandle_t gimbal_Task_Handle;
@@ -94,7 +98,7 @@ TaskHandle_t mode_switch_Task_Handle;
 TaskHandle_t info_get_Task_Handle;
 TaskHandle_t detect_Task_Handle;
 TaskHandle_t imu_Task_Handle;
-
+TaskHandle_t controller_Task_Handle;
 TaskHandle_t judge_tx_Task_Handle;
 TaskHandle_t judge_rx_Task_Handle;
 TaskHandle_t pc_tx_Task_Handle;
@@ -144,12 +148,12 @@ void start_task(void *parm)
 	}
 
 	{
-//		 xTaskCreate((TaskFunction_t)mode_switch_task,
-//		 			(const char *)"mode_switch_task",
-//		 			(uint16_t)MODE_SWITCH_TASK_SIZE,
-//		 			(void *)NULL,
-//		 			(UBaseType_t)MODE_SWITCH_TASK_PRIO,
-//		 			(TaskHandle_t *)&mode_switch_Task_Handle);
+		//		 xTaskCreate((TaskFunction_t)mode_switch_task,
+		//		 			(const char *)"mode_switch_task",
+		//		 			(uint16_t)MODE_SWITCH_TASK_SIZE,
+		//		 			(void *)NULL,
+		//		 			(UBaseType_t)MODE_SWITCH_TASK_PRIO,
+		//		 			(TaskHandle_t *)&mode_switch_Task_Handle);
 
 		// xTaskCreate((TaskFunction_t)info_get_task,
 		// 			(const char *)"info_get_task",
@@ -171,6 +175,13 @@ void start_task(void *parm)
 					(void *)NULL,
 					(UBaseType_t)IMU_TASK_PRIO,
 					(TaskHandle_t *)&imu_Task_Handle);
+
+		xTaskCreate((TaskFunction_t)controller_task,
+					(const char *)"controller_task",
+					(uint16_t)CONTROLLER_TASK_SIZE,
+					(void *)NULL,
+					(UBaseType_t)CONTROLLER_TASK_PRIO,
+					(TaskHandle_t *)&controller_Task_Handle);
 	}
 
 	{

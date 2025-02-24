@@ -19,10 +19,10 @@ void detect_task(void *parm)
 	uint32_t detect_wake_time = osKernelSysTick();
   while(1)
   {
-    module_offline_detect();//Ä£¿éÀëÏß¼ì²â
-   // module_offline_callback();//·¢ÏÖÄ£¿éÀëÏßºóµÄ´¦Àí·½·¨£¬ÓÉÎÒÃÇ×Ô¼º¶¨Òå
+    module_offline_detect();//æ¨¡å—ç¦»çº¿æ£€æµ‹
+   // module_offline_callback();//å‘ç°æ¨¡å—ç¦»çº¿åçš„å¤„ç†æ–¹æ³•ï¼Œç”±æˆ‘ä»¬è‡ªå·±å®šä¹‰
     
-    RCC_GetClocksFreq(&RCC_Clocks);//¼ì²âÍâ²¿¾§ÕñÊÇ·ñÆğÕñ
+    RCC_GetClocksFreq(&RCC_Clocks);//æ£€æµ‹å¤–éƒ¨æ™¶æŒ¯æ˜¯å¦èµ·æŒ¯
     
     detect_stack_surplus = uxTaskGetStackHighWaterMark(NULL);    
     vTaskDelayUntil(&detect_wake_time, 50);
@@ -35,11 +35,11 @@ void detect_param_init(void)
 {
   for(uint8_t id = CHASSIS_M1_OFFLINE; id <= JUDGE_SYS_OFFLINE; id++)
   {
-    global_err.list[id].param.set_timeout = 500;//ÔÊĞíÖĞ¶ÏÍ¨Ñ¶µÄ×î´óÊ±¼ä
-    global_err.list[id].param.last_times = 0;//¼ÇÂ¼ÉÏÒ»´ÎÍ¨Ñ¶µÄÊ±¼ä
-    global_err.list[id].param.delta_times = 0;//¼ÇÂ¼¾àÀëÉÏÒ»´ÎÍ¨Ñ¶µÄÊ±¼ä
-    global_err.list[id].err_exist = 0;//¹æ¶¨Ê±¼äÄÚÃ»ÓĞ½ÓÊÕµ½Êı¾İ¸Ã±êÖ¾Î»¾Í»áÖÃ1
-    global_err.err_now_id[id] = BOTTOM_DEVICE;//ÓÃIDµÄ·½Ê½¼ÇÂ¼ÊÇÄÄ¸ö²¿Î»Í¨Ñ¶³öÏÖÎÊÌâ
+    global_err.list[id].param.set_timeout = 500;//å…è®¸ä¸­æ–­é€šè®¯çš„æœ€å¤§æ—¶é—´
+    global_err.list[id].param.last_times = 0;//è®°å½•ä¸Šä¸€æ¬¡é€šè®¯çš„æ—¶é—´
+    global_err.list[id].param.delta_times = 0;//è®°å½•è·ç¦»ä¸Šä¸€æ¬¡é€šè®¯çš„æ—¶é—´
+    global_err.list[id].err_exist = 0;//è§„å®šæ—¶é—´å†…æ²¡æœ‰æ¥æ”¶åˆ°æ•°æ®è¯¥æ ‡å¿—ä½å°±ä¼šç½®1
+    global_err.err_now_id[id] = BOTTOM_DEVICE;//ç”¨IDçš„æ–¹å¼è®°å½•æ˜¯å“ªä¸ªéƒ¨ä½é€šè®¯å‡ºç°é—®é¢˜
   }
   global_err.list[PC_SYS_OFFLINE].param.set_timeout = 1000;
   global_err.list[PC_SYS_OFFLINE].param.last_times = 0;
@@ -54,13 +54,13 @@ void detect_param_init(void)
   global_err.err_now_id[IMU_OFFLINE] = BOTTOM_DEVICE;
 }
 
-//¼ÇÂ¼±¾´ÎÍ¨Ñ¶µÄÏµÍ³Ê±¼ä£¬ÓÃÓÚ±È½ÏÍ¨Ñ¶ÊÇ·ñ³öÏÖÒì³£
+//è®°å½•æœ¬æ¬¡é€šè®¯çš„ç³»ç»Ÿæ—¶é—´ï¼Œç”¨äºæ¯”è¾ƒé€šè®¯æ˜¯å¦å‡ºç°å¼‚å¸¸
 void err_detector_hook(int err_id)
 {
   global_err.list[err_id].param.last_times = HAL_GetTick();
 }
 
-//Èç¹û500ms»¹Ã»ÓĞ½ÓÊÕµ½Êı¾İ£¨PCÊÇ1000ms,ÍÓÂİÒÇÊÇ200ms£©£¬¾ÍÈÏÎª¶ÔÓ¦µÄÉè±¸³öÁËÎÊÌâ
+//å¦‚æœ500msè¿˜æ²¡æœ‰æ¥æ”¶åˆ°æ•°æ®ï¼ˆPCæ˜¯1000ms,é™€èºä»ªæ˜¯200msï¼‰ï¼Œå°±è®¤ä¸ºå¯¹åº”çš„è®¾å¤‡å‡ºäº†é—®é¢˜
 void module_offline_detect(void)
 {
   for (uint8_t id = CHASSIS_M1_OFFLINE; id <= IMU_OFFLINE; id++)
@@ -79,7 +79,7 @@ void module_offline_detect(void)
   }
 }
 
-//Í¨Ñ¶³öÏÖÒì³£Ê±µÄ´¦Àí·½·¨£¬IMUÍ¨¹ı·äÃùÆ÷ÌáÊ¾£¬ÆäËûµÄÉè±¸Í¨¹ı°åÔØLEDµÆÌáÊ¾
+//é€šè®¯å‡ºç°å¼‚å¸¸æ—¶çš„å¤„ç†æ–¹æ³•ï¼ŒIMUé€šè¿‡èœ‚é¸£å™¨æç¤ºï¼Œå…¶ä»–çš„è®¾å¤‡é€šè¿‡æ¿è½½LEDç¯æç¤º
 void module_offline_callback(void)
 {
 	static uint16_t buzz_flag = 0;
@@ -118,15 +118,15 @@ void module_offline_callback(void)
       }break;       
       case FRI_MOTO1_OFFLINE:
       {
-        /*ÓÃ»§´¦Àí´úÂë*/
+        /*ç”¨æˆ·å¤„ç†ä»£ç */
       }break;       
       case FRI_MOTO2_OFFLINE:
       {
-        /*ÓÃ»§´¦Àí´úÂë*/
+        /*ç”¨æˆ·å¤„ç†ä»£ç */
       }break;       
       case REMOTE_CTRL_OFFLINE:
       {
-				GPIO_ResetBits(GPIOG,GPIO_Pin_8);//Ò£¿ØÀëÏßµÄ´¦Àí·ÅÔÚÁËmodeswitchÈÎÎñÖĞ
+				GPIO_ResetBits(GPIOG,GPIO_Pin_8);//é¥æ§ç¦»çº¿çš„å¤„ç†æ”¾åœ¨äº†modeswitchä»»åŠ¡ä¸­
       }break;        
       case JUDGE_SYS_OFFLINE:
       {
@@ -134,11 +134,11 @@ void module_offline_callback(void)
       }break;        
       case PC_SYS_OFFLINE:
       {
-        pc_recv_mesg.mode_Union.info.visual_valid = 0;//Í¨Ñ¶ÒâÍâÖĞ¶ÏÊ±·ÀÖ¹ÔÆÌ¨ÂÒ×ª
+        pc_recv_mesg.mode_Union.info.visual_valid = 0;//é€šè®¯æ„å¤–ä¸­æ–­æ—¶é˜²æ­¢äº‘å°ä¹±è½¬
 				pc_recv_mesg.mode_Union.info.navigation_determine = 0;
       }break;
 			case IMU_OFFLINE:
-			{	//IMUÎŞ·¨¶ÁÈ¡Êı¾İÊ±£¬¿ª·¢°å·äÃùÆ÷Ã¿Ãë½ĞÒ»ÏÂ
+			{	//IMUæ— æ³•è¯»å–æ•°æ®æ—¶ï¼Œå¼€å‘æ¿èœ‚é¸£å™¨æ¯ç§’å«ä¸€ä¸‹
 				switch(buzz_flag)
 				{
 					case 0:

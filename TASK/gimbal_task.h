@@ -34,6 +34,7 @@ typedef struct
   float yaw_relative_angle;
   float pit_gyro_angle;
   float yaw_gyro_angle;
+	float rol_gyro_angle;
   /* ½ÇËÙ¶È */
   float yaw_palstance;
   float pit_palstance;

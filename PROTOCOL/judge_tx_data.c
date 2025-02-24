@@ -10,9 +10,9 @@
 #include "math.h"
 #include "pc_rx_data.h"
 
-judge_txdata_t judge_send_mesg;//²ÃÅĞÏµÍ³·¢ËÍ½á¹¹Ìå£¬ÓÃ»§×Ô¶¨Òå·¢ËÍµÄÊı¾İ´ò°üÔÚÀïÃæ£¬µ½Ê±ºò¿ÉÒÔÔÚdebugÀï²é¿´ÓëĞŞ¸Ä
+judge_txdata_t judge_send_mesg;//è£åˆ¤ç³»ç»Ÿå‘é€ç»“æ„ä½“ï¼Œç”¨æˆ·è‡ªå®šä¹‰å‘é€çš„æ•°æ®æ‰“åŒ…åœ¨é‡Œé¢ï¼Œåˆ°æ—¶å€™å¯ä»¥åœ¨debugé‡ŒæŸ¥çœ‹ä¸ä¿®æ”¹
 static SemaphoreHandle_t judge_txdata_mutex;
-fifo_s_t  judge_txdata_fifo;//ÓÃÀ´ÔİÊ±´æ·ÅÊı¾İµÄÓÊÏä
+fifo_s_t  judge_txdata_fifo;//ç”¨æ¥æš‚æ—¶å­˜æ”¾æ•°æ®çš„é‚®ç®±
 static uint8_t   judge_txdata_buf[JUDGE_TX_FIFO_BUFLEN];
 /////////////
 extern float nowfps;
@@ -26,7 +26,7 @@ void judgement_tx_param_init(void)
   fifo_s_init(&judge_txdata_fifo, judge_txdata_buf, JUDGE_TX_FIFO_BUFLEN, judge_txdata_mutex);
 }
 
-//#define Hero 1 //²½±øÓÃ´Ë´¦Òª×¢ÊÍµô£¬Ó¢ĞÛÓÃ´Ë´¦Îª1 ²»Í¬´¦ÔÚ×¼ĞÄ !!!
+//#define Hero 1 //æ­¥å…µç”¨æ­¤å¤„è¦æ³¨é‡Šæ‰ï¼Œè‹±é›„ç”¨æ­¤å¤„ä¸º1 ä¸åŒå¤„åœ¨å‡†å¿ƒ !!!
 #ifdef Hero
 static void client_graphic_draw_short_line1(void);
 #else
@@ -34,8 +34,8 @@ static void client_graphic_draw_short_line1(void);
 static void client_graphic_draw_Circle(void);	
 #endif
 
-/*ÒÔÏÂÊı¾İ¾ùÊÇĞèÒª¿´Êµ¼ÊÏÔÊ¾Ğ§¹ûĞŞ¸ÄµÄ£¬ËùÒÔÔÚ»æÍ¼Ê±¿ÉÒÔÏÈÓÃËü¸³Öµ¸ø½á¹¹Ìå£¬±ãÓÚÎÒÃÇÔÚdebugÖĞ¸Ä±ä½á¹¹ÌåµÄ
-	Öµ£¬µÈºÏÊÊµÄÖµÈ·¶¨ÏÂÀ´£¬ÔÙ½«Õâ¸öÈ·¶¨µÄÖµÒÔ³£Êı¸³Öµ¸ø½á¹¹Ìå*/
+/*ä»¥ä¸‹æ•°æ®å‡æ˜¯éœ€è¦çœ‹å®é™…æ˜¾ç¤ºæ•ˆæœä¿®æ”¹çš„ï¼Œæ‰€ä»¥åœ¨ç»˜å›¾æ—¶å¯ä»¥å…ˆç”¨å®ƒèµ‹å€¼ç»™ç»“æ„ä½“ï¼Œä¾¿äºæˆ‘ä»¬åœ¨debugä¸­æ”¹å˜ç»“æ„ä½“çš„
+	å€¼ï¼Œç­‰åˆé€‚çš„å€¼ç¡®å®šä¸‹æ¥ï¼Œå†å°†è¿™ä¸ªç¡®å®šçš„å€¼ä»¥å¸¸æ•°èµ‹å€¼ç»™ç»“æ„ä½“*/
 uint32_t debug_start_angle = 0;
 uint32_t debug_end_angle = 0;
 uint32_t debug_width = 0;
@@ -46,10 +46,10 @@ uint32_t debug_end_x = 1400;
 uint32_t debug_end_y = 0;
 
 /**
-²ÎÊı¡ª¡ª
-num1£º¸¡µãÊıµçÑ¹£¬pitÓÃ;num1¡¢num2²¹³¥½ÇÓÃ 
-name: Cap,Pitch; type: ADD,Change; color: ÑÕÉ«;
-start_x¡¢start_y: ÆğÊ¼×ø±ê  
+å‚æ•°â€”â€”
+num1ï¼šæµ®ç‚¹æ•°ç”µå‹ï¼Œpitç”¨;num1ã€num2è¡¥å¿è§’ç”¨ 
+name: Cap,Pitch; type: ADD,Change; color: é¢œè‰²;
+start_xã€start_y: èµ·å§‹åæ ‡  
 **/
 static void client_grapjic_draw_float(float num1,float num2,char name,char type,char layer,char color,uint16_t start_x,uint16_t start_y)
 {
@@ -70,7 +70,7 @@ static void client_grapjic_draw_float(float num1,float num2,char name,char type,
 	////////////////////
 	if(name == Distance)
 		strcpy(float_string ,"Dis: 00.0");
-	if(name == Compensates)//²¹³¥yaw¡¢pit
+	if(name == Compensates)//è¡¥å¿yawã€pit
   { 
     if(num1>=0 && num2>=0)strcpy(float_string ,"Y: 00.0\n\nP: 00.0");
 		if(num1<0 && num2>=0) strcpy(float_string ,"Y:-00.0\n\nP: 00.0");
@@ -79,19 +79,19 @@ static void client_grapjic_draw_float(float num1,float num2,char name,char type,
   }
 	if(name == Pitch||name == Distance)
 	{
-		float_string[5] = (uint8_t)fabs(num1)/10+48; //48¡ª¡ª'0'ASCIIÂë
+		float_string[5] = (uint8_t)fabs(num1)/10+48; //48â€”â€”'0'ASCIIç 
 		float_string[6] = (uint8_t)fabs(num1)%10+48;
 		float_string[7] = '.';
 		float_string[8] = (uint8_t)(fmod(fabs(num1)*10.0,10.0)+48);
 	}
 	else if(name == Cap){
 		
-		float_string[4] = (uint8_t)fabs(num1)/10+48; //48¡ª¡ª'0'ASCIIÂë
+		float_string[4] = (uint8_t)fabs(num1)/10+48; //48â€”â€”'0'ASCIIç 
 		float_string[5] = (uint8_t)fabs(num1)%10+48;
 		float_string[6] = '.';
 		float_string[7] = (uint8_t)(fmod(fabs(num1)*10.0,10.0)+48);
 
-		float_string[14] = (uint8_t)fabs(num2)/10+48; //48¡ª¡ª'0'ASCIIÂë
+		float_string[14] = (uint8_t)fabs(num2)/10+48; //48â€”â€”'0'ASCIIç 
 		float_string[15] = (uint8_t)fabs(num2)%10+48;
 		float_string[16] = '.';
 		float_string[17] = (uint8_t)(fmod(fabs(num2)*10.0,10.0)+48);
@@ -99,7 +99,7 @@ static void client_grapjic_draw_float(float num1,float num2,char name,char type,
 	/////////////////////////////
 		else if(name == fps){
 		
-		float_string[4] = (uint8_t)fabs(num1)/10+48; //48¡ª¡ª'0'ASCIIÂë
+		float_string[4] = (uint8_t)fabs(num1)/10+48; //48â€”â€”'0'ASCIIç 
 		float_string[5] = (uint8_t)fabs(num1)%10+48;
 		float_string[6] = '.';
 		float_string[7] = (uint8_t)(fmod(fabs(num1)*10.0,10.0)+48);	
@@ -109,18 +109,18 @@ static void client_grapjic_draw_float(float num1,float num2,char name,char type,
 	///////////////////////////
 	else if(name == Compensates)
 	{
-		float_string[3] = (uint8_t)fabs(num1)/10+48; //48¡ª¡ª'0'ASCIIÂë
+		float_string[3] = (uint8_t)fabs(num1)/10+48; //48â€”â€”'0'ASCIIç 
 		float_string[4] = (uint8_t)fabs(num1)%10+48;
 		float_string[5] = '.';
 		float_string[6] = (uint8_t)(fmod(fabs(num1)*10.0,10.0)+48);	
 
-		float_string[12] = (uint8_t)fabs(num2)/10+48; //48¡ª¡ª'0'ASCIIÂë
+		float_string[12] = (uint8_t)fabs(num2)/10+48; //48â€”â€”'0'ASCIIç 
 		float_string[13] = (uint8_t)fabs(num2)%10+48;
 		float_string[14] = '.';
 		float_string[15] = (uint8_t)(fmod(fabs(num2)*10.0,10.0)+48);		
 	}else if(name == Speed){
 
-		float_string[4] = (uint16_t)fabs(num1)/1000+48; //48¡ª¡ª'0'ASCIIÂë
+		float_string[4] = (uint16_t)fabs(num1)/1000+48; //48â€”â€”'0'ASCIIç 
 		float_string[5] = (uint16_t)fabs(num1)/100-(uint16_t)fabs(num1)/1000*10+48;
 		float_string[6] = (uint16_t)fabs(num1)/10-(uint16_t)fabs(num1)/100*10+48;
 		float_string[7] = (uint16_t)fabs(num1)%10+48;
@@ -147,9 +147,9 @@ static void client_grapjic_draw_float(float num1,float num2,char name,char type,
 }
 
 /**
-²ÎÊı¡ª¡ª
-str£º×Ö·û; name: Gimbal,Chassis,Shoot; type: ADD,Change; color: ÑÕÉ«;
-start_x¡¢start_y: ÆğÊ¼×ø±ê  
+å‚æ•°â€”â€”
+strï¼šå­—ç¬¦; name: Gimbal,Chassis,Shoot; type: ADD,Change; color: é¢œè‰²;
+start_xã€start_y: èµ·å§‹åæ ‡  
 **/
 static void client_graphic_draw_String(char *str,char name,char type,char layer,char color,uint16_t start_x,uint16_t start_y)
 {
@@ -206,7 +206,7 @@ static void client_graphic_draw_String(char *str,char name,char type,char layer,
 		judge_send_mesg.ext_client_custom_character_shoot.grapic_data_struct.end_x = 0;
 		judge_send_mesg.ext_client_custom_character_shoot.grapic_data_struct.end_y = 0;		
 	}
-	else //ÊÓ¾õÓĞĞ§Î»
+	else //è§†è§‰æœ‰æ•ˆä½
 	{
 		memcpy(&judge_send_mesg.ext_client_custom_character.data[0], string, sizeof(string));
 		judge_send_mesg.ext_client_custom_character.grapic_data_struct.graphic_name[0] = name;
@@ -226,7 +226,7 @@ static void client_graphic_draw_String(char *str,char name,char type,char layer,
 	}
 }
 
-static void client_graphic_draw_car_line(void)//³µÉíÏß Í¼²ã4
+static void client_graphic_draw_car_line(void)//è½¦èº«çº¿ å›¾å±‚4
 {
 	
 	judge_send_mesg.ext_client_custom_graphic_car_line.grapic_data_struct[0].graphic_name[0] = line_1c;
@@ -385,14 +385,14 @@ static void client_graphic_draw_line(void){
 
 
 
-//¿Í»§¶Ë×Ô¶¨ÒåUI½çÃæ
+//å®¢æˆ·ç«¯è‡ªå®šä¹‰UIç•Œé¢
 uint8_t Line_mask = 0;
 uint8_t text_mask = 1;
 uint8_t Chassis_mask = 0;
 uint8_t Gimbal_mask = 0;
 uint8_t Shoot_mask = 0;
 uint8_t	view_mask = 0;	
-uint8_t Idle_mask = 0;//¿ÕÏĞ±êÖ¾
+uint8_t Idle_mask = 0;//ç©ºé—²æ ‡å¿—
 void judgement_client_graphics_draw_pack(uint8_t text_twist)
 {
 	uint8_t current_robot_id = 0;
@@ -400,8 +400,8 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 	static uint8_t i;
 	static uint8_t again_flag;
 	
-	current_robot_id = judge_recv_mesg.game_robot_state.robot_id;  //¶ÁÈ¡µ±Ç°»úÆ÷ÈËµÄid
-	//×Ô¶¨ÒåUI receiver_IDÖ»ÄÜÑ¡µ±Ç°»úÆ÷ÈËµÄ¶ÔÓ¦µÄ¿Í»§¶Ë
+	current_robot_id = judge_recv_mesg.game_robot_state.robot_id;  //è¯»å–å½“å‰æœºå™¨äººçš„id
+	//è‡ªå®šä¹‰UI receiver_IDåªèƒ½é€‰å½“å‰æœºå™¨äººçš„å¯¹åº”çš„å®¢æˆ·ç«¯
 	switch(current_robot_id)
 	{
 		//red robot
@@ -459,13 +459,13 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 
 	}
 	
-	//Çå³ıÊı×é
+	//æ¸…é™¤æ•°ç»„
 	memset(&judge_send_mesg.ext_client_custom_character.data[0],0,sizeof(judge_send_mesg.ext_client_custom_character.data[0]));
 	memset(&judge_send_mesg.ext_client_custom_character_chassis.data[0],0,sizeof(judge_send_mesg.ext_client_custom_character_chassis.data[0]));
 	memset(&judge_send_mesg.ext_client_custom_character_shoot.data[0],0,sizeof(judge_send_mesg.ext_client_custom_character_shoot.data[0]));
 	memset(&judge_send_mesg.ext_client_custom_character_gimbal.data[0],0,sizeof(judge_send_mesg.ext_client_custom_character_gimbal.data[0]));
 	
-	if(rc.sw2 == RC_DN && rc.sw1 == RC_MI && !again_flag  )//´òÖĞ´òÏÂ¿ÉÖØ¸´Ë¢ĞÂ£¬Ìá¸ßÈİ´íÂÊ
+	if(rc.sw2 == RC_DN && rc.sw1 == RC_MI && !again_flag  )//æ‰“ä¸­æ‰“ä¸‹å¯é‡å¤åˆ·æ–°ï¼Œæé«˜å®¹é”™ç‡
 	{
 		Line_mask = 1;
 		text_mask = 1;
@@ -475,10 +475,10 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 		again_flag = 0;
 
 	
-	if(rc.sw2 == RC_MI) //Æô¶¯»úÆ÷ÈË²»»­UI·ÀÖ¹¸´»îºóÖØ¸´»­×¼ĞÄ£¬Ó¢ĞÛ´òµ½ÉÏµµRC_UP£¬²½±ø´òÖĞµµRC_MI
+	if(rc.sw2 == RC_MI) //å¯åŠ¨æœºå™¨äººä¸ç”»UIé˜²æ­¢å¤æ´»åé‡å¤ç”»å‡†å¿ƒï¼Œè‹±é›„æ‰“åˆ°ä¸Šæ¡£RC_UPï¼Œæ­¥å…µæ‰“ä¸­æ¡£RC_MI
 		Line_mask = 4;
 	
-	//»­Ïß
+	//ç”»çº¿
 	if(Line_mask == 1)
 	{
 		if(i++ < 5)
@@ -521,7 +521,7 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 		    judge_send_mesg.ext_client_custom_graphic_single.data_cmd_id = Client_Draw_One_Graph;
 			judge_send_mesg.ext_client_custom_graphic_single.sender_ID = (uint16_t)current_robot_id;
 			judge_send_mesg.ext_client_custom_graphic_single.receiver_ID = receiver_ID;
-			client_graphic_draw_Circle ();//²½±øÔ²ĞÎ×¼ĞÄ
+			client_graphic_draw_Circle ();//æ­¥å…µåœ†å½¢å‡†å¿ƒ
 			data_packet_pack(STUDENT_INTERACTIVE_HEADER_DATA_ID,(uint8_t *)&judge_send_mesg.ext_client_custom_graphic_single,
 											sizeof(judge_send_mesg.ext_client_custom_graphic_single), DN_REG_ID);
 		}
@@ -533,14 +533,14 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 	}	
 
 
-	//»­ÎÄ×Ö
+	//ç”»æ–‡å­—
 	
 	if(Line_mask == 4)
 	{
 		if(text_mask == 1) //Add
 		{
 			i++;
-			if(i >= 1 && i<6) //Í¼²ã3 µ×ÅÌ
+			if(i >= 1 && i<6) //å›¾å±‚3 åº•ç›˜
 			{
 				judge_send_mesg.ext_client_custom_character_chassis.data_cmd_id = Client_Draw_Character_Graph;
 				judge_send_mesg.ext_client_custom_character_chassis.sender_ID = (uint16_t)current_robot_id;
@@ -549,7 +549,7 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 				data_packet_pack(STUDENT_INTERACTIVE_HEADER_DATA_ID,(uint8_t *)&judge_send_mesg.ext_client_custom_character_chassis,
 												sizeof(judge_send_mesg.ext_client_custom_character_chassis), DN_REG_ID);
 			}	
-			else if(i >= 6 && i< 11)//ÔÆÌ¨
+			else if(i >= 6 && i< 11)//äº‘å°
 			{
 				judge_send_mesg.ext_client_custom_character_gimbal.data_cmd_id = Client_Draw_Character_Graph;
 				judge_send_mesg.ext_client_custom_character_gimbal.sender_ID = (uint16_t)current_robot_id;
@@ -558,7 +558,7 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 				data_packet_pack(STUDENT_INTERACTIVE_HEADER_DATA_ID,(uint8_t *)&judge_send_mesg.ext_client_custom_character_gimbal,
 												sizeof(judge_send_mesg.ext_client_custom_character_gimbal), DN_REG_ID);
 			}
-			else if(i >= 11 && i<16)//·¢Éä
+			else if(i >= 11 && i<16)//å‘å°„
 			{				
 				judge_send_mesg.ext_client_custom_character_shoot.data_cmd_id = Client_Draw_Character_Graph;
 				judge_send_mesg.ext_client_custom_character_shoot.sender_ID = (uint16_t)current_robot_id;
@@ -567,18 +567,18 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 				data_packet_pack(STUDENT_INTERACTIVE_HEADER_DATA_ID,(uint8_t *)&judge_send_mesg.ext_client_custom_character_shoot,
 												sizeof(judge_send_mesg.ext_client_custom_character_shoot), DN_REG_ID);
 			}
-			else if(i == 16)//Cap¡¢View¡¢Pit
-				client_grapjic_draw_float(cap_store,chassis.CapData[1],Cap,Add,layer2,Green,1100,620); //Í¼²ã2
+			else if(i == 16)//Capã€Viewã€Pit
+				client_grapjic_draw_float(cap_store,chassis.CapData[1],Cap,Add,layer2,Green,1100,620); //å›¾å±‚2
 			else if(i == 17)
 				client_grapjic_draw_float(gimbal.sensor.pit_relative_angle,0,Pitch,Add,layer2,Redblue,1400,890);
 			else if(i == 18)
 			{
-				memset(&judge_send_mesg.ext_client_custom_character,0,sizeof(judge_send_mesg.ext_client_custom_character));//Çå¿ÕÊı×é
+				memset(&judge_send_mesg.ext_client_custom_character,0,sizeof(judge_send_mesg.ext_client_custom_character));//æ¸…ç©ºæ•°ç»„
 				client_graphic_draw_String("View:F",View,Add,layer2,Pink,1100,467);
 			}
-			else if(i == 19)//²¹³¥
+			else if(i == 19)//è¡¥å¿
 			{
-				memset(&judge_send_mesg.ext_client_custom_character,0,sizeof(judge_send_mesg.ext_client_custom_character));//Çå¿ÕÊı×é
+				memset(&judge_send_mesg.ext_client_custom_character,0,sizeof(judge_send_mesg.ext_client_custom_character));//æ¸…ç©ºæ•°ç»„
 				client_grapjic_draw_float(yaw_set,pit_set,Compensates,Add,layer2,Yellow,1600,890);			
 			}
 			else if(i == 20)
@@ -622,7 +622,7 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 			judge_send_mesg.ext_client_custom_character_shoot.sender_ID = (uint16_t)current_robot_id;
 			judge_send_mesg.ext_client_custom_character_shoot.receiver_ID = receiver_ID;
 			
-			memset(&judge_send_mesg.ext_client_custom_character,0,sizeof(judge_send_mesg.ext_client_custom_character));//Çå¿ÕÊı×é
+			memset(&judge_send_mesg.ext_client_custom_character,0,sizeof(judge_send_mesg.ext_client_custom_character));//æ¸…ç©ºæ•°ç»„
 			judge_send_mesg.ext_client_custom_character.data_cmd_id = Client_Draw_Character_Graph;
 			judge_send_mesg.ext_client_custom_character.sender_ID = (uint16_t)current_robot_id;
 			judge_send_mesg.ext_client_custom_character.receiver_ID = receiver_ID;
@@ -824,9 +824,9 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 			last_view=view;
 
 
-			if(Idle_mask == 1) //¿ÕÏĞÊ±Ö´ĞĞ
+			if(Idle_mask == 1) //ç©ºé—²æ—¶æ‰§è¡Œ
 			{
-				if(text_twist == 1 && gimbal_mode != GIMBAL_SHOOT_BUFF) //ÊµÊ±ÏÔÊ¾µçÈİ £¬´òÄÜÁ¿»ú¹Ø³ıÍâ
+				if(text_twist == 1 && gimbal_mode != GIMBAL_SHOOT_BUFF) //å®æ—¶æ˜¾ç¤ºç”µå®¹ ï¼Œæ‰“èƒ½é‡æœºå…³é™¤å¤–
 				{
 					if(chassis.CapData[1]<14.5f)
 						client_grapjic_draw_float(cap_store,chassis.CapData[1],Cap,Change,layer2,Yellow,1100,620);
@@ -836,21 +836,21 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 					data_packet_pack(STUDENT_INTERACTIVE_HEADER_DATA_ID,(uint8_t *)&judge_send_mesg.ext_client_custom_character,
 													sizeof(judge_send_mesg.ext_client_custom_character), DN_REG_ID);					
 				}
-				else if (text_twist == 1 && gimbal_mode == GIMBAL_SHOOT_BUFF)//´òÄÜÁ¿»ú¹Ø£¬ÊµÊ±ÏÔÊ¾²¹³¥
+				else if (text_twist == 1 && gimbal_mode == GIMBAL_SHOOT_BUFF)//æ‰“èƒ½é‡æœºå…³ï¼Œå®æ—¶æ˜¾ç¤ºè¡¥å¿
 				{
 					client_grapjic_draw_float(pc_recv_mesg.aim_yaw,pc_recv_mesg.aim_pitch,Compensates,Change,layer2,Yellow,1600,890);	
 					data_packet_pack(STUDENT_INTERACTIVE_HEADER_DATA_ID,(uint8_t *)&judge_send_mesg.ext_client_custom_character,
 													sizeof(judge_send_mesg.ext_client_custom_character), DN_REG_ID);					
 				}
 				//////////////////////////////////////
-				if(text_twist == 1) //ÊµÊ±ÏÔÊ¾fps
+				if(text_twist == 1) //å®æ—¶æ˜¾ç¤ºfps
 				{
 					client_grapjic_draw_float(nowfps,0,fps,Change,layer2,Yellow,1100,670);
 					data_packet_pack(STUDENT_INTERACTIVE_HEADER_DATA_ID,(uint8_t *)&judge_send_mesg.ext_client_custom_character,
 					sizeof(judge_send_mesg.ext_client_custom_character), DN_REG_ID);
 				}
 				//////////////////////////////////////
-				if(text_twist == 2) //ÊµÊ±ÏÔÊ¾Pitch
+				if(text_twist == 2) //å®æ—¶æ˜¾ç¤ºPitch
 				{
 					client_grapjic_draw_float(gimbal.sensor.pit_relative_angle,0,Pitch,Change,layer2,Redblue,1400,890);
 					data_packet_pack(STUDENT_INTERACTIVE_HEADER_DATA_ID,(uint8_t *)&judge_send_mesg.ext_client_custom_character,
@@ -887,7 +887,7 @@ void judgement_client_graphics_draw_pack(uint8_t text_twist)
 	}	
 }
 
-static void client_graphic_draw_short_line1(void) //²½±ø×¼ĞÇ£¬Í¼²ã7
+static void client_graphic_draw_short_line1(void) //æ­¥å…µå‡†æ˜Ÿï¼Œå›¾å±‚7
 {
 	judge_send_mesg.ext_client_custom_graphic_five.grapic_data_struct[0].graphic_name[0] = line_1s;
 	judge_send_mesg.ext_client_custom_graphic_five.grapic_data_struct[0].operate_tpye = Add;
@@ -960,7 +960,7 @@ static void client_graphic_draw_short_line1(void) //²½±ø×¼ĞÇ£¬Í¼²ã7
 	judge_send_mesg.ext_client_custom_graphic_five.grapic_data_struct[4].end_y = 380;
 }
 
-static void client_graphic_draw_Circle(void) //²½±ø×¼ĞÄ2 Í¼²ã6
+static void client_graphic_draw_Circle(void) //æ­¥å…µå‡†å¿ƒ2 å›¾å±‚6
 {
 	judge_send_mesg.ext_client_custom_graphic_single.grapic_data_struct.graphic_name[0] = circle;
 	judge_send_mesg.ext_client_custom_graphic_single.grapic_data_struct.operate_tpye = Add;
@@ -971,21 +971,21 @@ static void client_graphic_draw_Circle(void) //²½±ø×¼ĞÄ2 Í¼²ã6
 	judge_send_mesg.ext_client_custom_graphic_single.grapic_data_struct.end_angle =  0 ;
 	judge_send_mesg.ext_client_custom_graphic_single.grapic_data_struct.width = 2;
 	judge_send_mesg.ext_client_custom_graphic_single.grapic_data_struct.start_x = 960;
-	judge_send_mesg.ext_client_custom_graphic_single.grapic_data_struct.start_y = 437;//540ÖĞĞÄ
+	judge_send_mesg.ext_client_custom_graphic_single.grapic_data_struct.start_y = 437;//540ä¸­å¿ƒ
 	judge_send_mesg.ext_client_custom_graphic_single.grapic_data_struct.radius = 50;
-	judge_send_mesg.ext_client_custom_graphic_single.grapic_data_struct.end_x = 960;//960ÖĞĞÄ
+	judge_send_mesg.ext_client_custom_graphic_single.grapic_data_struct.end_x = 960;//960ä¸­å¿ƒ
 	judge_send_mesg.ext_client_custom_graphic_single.grapic_data_struct.end_y = 437;	
 }
 
 
-//¼º·½»úÆ÷ÈËÍ¨ĞÅ
+//å·±æ–¹æœºå™¨äººé€šä¿¡
 void judgement_client_packet_pack(uint8_t *p_data)
 {
 	uint8_t current_robot_id = 0;
 	uint16_t receiver_ID = 0;
 	
-	current_robot_id = judge_recv_mesg.game_robot_state.robot_id;  //¶ÁÈ¡µ±Ç°»úÆ÷ÈËµÄid
-	//´Ë´¦Ñ¡ÔñµÄreceiver_ID¿ÉÒÔ×ÔĞĞÑ¡Ôñ
+	current_robot_id = judge_recv_mesg.game_robot_state.robot_id;  //è¯»å–å½“å‰æœºå™¨äººçš„id
+	//æ­¤å¤„é€‰æ‹©çš„receiver_IDå¯ä»¥è‡ªè¡Œé€‰æ‹©
 	switch(current_robot_id)
 	{
 		//red robot
@@ -1054,18 +1054,18 @@ void judgement_client_packet_pack(uint8_t *p_data)
 	judge_send_mesg.ext_student_interactive_data.data_cmd_id = RobotCommunication;
 	judge_send_mesg.ext_student_interactive_data.sender_ID = (uint16_t)current_robot_id;
 	judge_send_mesg.ext_student_interactive_data.receiver_ID = receiver_ID;
-	//½«×Ô¶¨ÒåµÄÊı¾İ¸´ÖÆµ½·¢ËÍ½á¹¹ÌåÖĞ
+	//å°†è‡ªå®šä¹‰çš„æ•°æ®å¤åˆ¶åˆ°å‘é€ç»“æ„ä½“ä¸­
 	memcpy(&judge_send_mesg.ext_student_interactive_data.data[0], p_data,sizeof(judge_send_mesg.ext_student_interactive_data.data));
-	//¸Ãº¯ÊıµÄ¹¦ÄÜÎª½«ĞèÒª·¢ËÍµÄÊı¾İ´ò°ü£¬±ãÓÚÏÂÒ»²½Í¨¹ı´®¿Ú3·¢ËÍ¸ø²ÃÅĞÏµÍ³
+	//è¯¥å‡½æ•°çš„åŠŸèƒ½ä¸ºå°†éœ€è¦å‘é€çš„æ•°æ®æ‰“åŒ…ï¼Œä¾¿äºä¸‹ä¸€æ­¥é€šè¿‡ä¸²å£3å‘é€ç»™è£åˆ¤ç³»ç»Ÿ
 	data_packet_pack(STUDENT_INTERACTIVE_HEADER_DATA_ID, (uint8_t *)&judge_send_mesg.ext_student_interactive_data,
 									 STUDENT_DATA_LENGTH, DN_REG_ID);
 }
 
-void sentry_cmd_packet_pack() //Î´ĞŞ¸ÄÍê //uint8_t *p_data
+void sentry_cmd_packet_pack() //æœªä¿®æ”¹å®Œ //uint8_t *p_data
 {
 	uint8_t current_robot_id = 0;
 	
-	current_robot_id = judge_recv_mesg.game_robot_state.robot_id;  //¶ÁÈ¡µ±Ç°»úÆ÷ÈËµÄid
+	current_robot_id = judge_recv_mesg.game_robot_state.robot_id;  //è¯»å–å½“å‰æœºå™¨äººçš„id
 	
 	judge_send_mesg.sentry_cmd.data_cmd_id = SENTRY_CMD_ID;
 	judge_send_mesg.sentry_cmd.sender_ID = (uint16_t)current_robot_id;
@@ -1088,11 +1088,11 @@ void sentry_cmd_packet_pack() //Î´ĞŞ¸ÄÍê //uint8_t *p_data
 	data_packet_pack(STUDENT_INTERACTIVE_HEADER_DATA_ID,(uint8_t *)&judge_send_mesg.sentry_cmd,
 										sizeof(judge_send_mesg.sentry_cmd), DN_REG_ID);
 }
-void map_data_packet_pack(uint8_t *p_data) //Î´ĞŞ¸ÄÍê
+void map_data_packet_pack(uint8_t *p_data) //æœªä¿®æ”¹å®Œ
 {
-	judge_send_mesg.map_data.sender_id = judge_recv_mesg.game_robot_state.robot_id;   //¶ÁÈ¡µ±Ç°»úÆ÷ÈËµÄid
+	judge_send_mesg.map_data.sender_id = judge_recv_mesg.game_robot_state.robot_id;   //è¯»å–å½“å‰æœºå™¨äººçš„id
 	
-		//¸Ãº¯ÊıµÄ¹¦ÄÜÎª½«ĞèÒª·¢ËÍµÄÊı¾İ´ò°ü£¬±ãÓÚÏÂÒ»²½Í¨¹ı´®¿Ú3·¢ËÍ¸ø²ÃÅĞÏµÍ³
+		//è¯¥å‡½æ•°çš„åŠŸèƒ½ä¸ºå°†éœ€è¦å‘é€çš„æ•°æ®æ‰“åŒ…ï¼Œä¾¿äºä¸‹ä¸€æ­¥é€šè¿‡ä¸²å£3å‘é€ç»™è£åˆ¤ç³»ç»Ÿ
 	data_packet_pack(MAP_DATA_ID, (uint8_t *)&judge_send_mesg.map_data,
 									 sizeof(judge_send_mesg.map_data), DN_REG_ID);
 }
