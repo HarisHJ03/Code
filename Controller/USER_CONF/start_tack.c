@@ -21,7 +21,7 @@
  *                                                        *
  *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~        *
  *                                                        *
- *               ·ð×æ±£ÓÓ         ÓÀÎÞBUG                 *
+ *               ·ð×æ±£ÓÓ         ÓÀÎÞBUG                 	*
  **********************************************************/
 
 #include "start_task.h"
@@ -185,12 +185,12 @@ void start_task(void *parm)
 	}
 
 	{
-		// xTaskCreate((TaskFunction_t)judge_tx_task,
-		// 			(const char *)"judge_tx_task",
-		// 			(uint16_t)JUDEG_TX_TASK_SIZE,
-		// 			(void *)NULL,
-		// 			(UBaseType_t)JUDEG_TX_TASK_PRIO,
-		// 			(TaskHandle_t *)&judge_tx_Task_Handle);
+		xTaskCreate((TaskFunction_t)judge_tx_task,
+					(const char *)"judge_tx_task",
+					(uint16_t)JUDEG_TX_TASK_SIZE,
+					(void *)NULL,
+					(UBaseType_t)JUDEG_TX_TASK_PRIO,
+					(TaskHandle_t *)&judge_tx_Task_Handle);
 
 		// xTaskCreate((TaskFunction_t)judge_rx_task,
 		// 			(const char *)"judge_rx_task",

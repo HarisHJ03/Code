@@ -7,6 +7,12 @@
         "data_packet.h": "c",
         "comm_task.h": "c",
         "bmi088driver.h": "c",
-        "imu_task.h": "c"
+        "imu_task.h": "c",
+        "judge_task.h": "c",
+        "judge_tx_data.h": "c",
+        "compare": "c",
+        "cstdint": "c",
+        "controller_task.h": "c",
+        "detect_task.h": "c"
     }
 }

@@ -66,6 +66,7 @@ typedef struct
 
     float gNorm;
 
+		float Last_Accel[3];
 } IMU_Data_t;
 
 

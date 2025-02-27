@@ -3,36 +3,29 @@
 
 #include "stm32f4xx.h"
 #include "bsp_imu.h"
-// #include "gimbal_task.h"
-// #include "cmsis_os.h"
 #include "bsp_imu.h"
 #include "pid.h"
 #include "sys_config.h"
-// #include "bsp_io.h"
 #include "math.h"
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
 #include "task.h"
-// #include "bsp_can.h"
-// #include "comm_task.h"
 #include "bmi088driver.h"
 #include "delay.h"
 #include "MahonyAHRS.h"
-// #include "IST8310.h"
 #include "filters.h"
 #include "bsp_dwt.h"
 #include "dma.h"
-// #include "detect_task.h"
 #include "kalman_filter.h"
 #include "BMI088Middleware.h"
 #include "ahrs.h"
-// #include "modeswitch_task.h"
 #include "filter.h"
 #include "iwdg.h"
 #include "pc_task.h"
+#include "judge_task.h"
+#include "controller_task.h"
 
 #include "stdio.h"
-
 
 /* imu task period time (ms) */
 #define IMU_TASK_PERIOD 1
@@ -80,10 +73,9 @@ typedef struct
   float yaw;
 } imu_attitude_t;
 
+extern IMU_Data_t BMI088;
+extern float clc_dt;
 void imu_task(void const *argu);
 
-
 #endif
-
-
 

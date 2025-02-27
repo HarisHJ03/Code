@@ -1,23 +1,27 @@
 #include "judge_task.h"
-#include "STM32_TIM_BASE.h"
 
-#include "FreeRTOSConfig.h"
-#include "FreeRTOS.h"
-#include "task.h"
-
-#include "comm_task.h"
-#include "detect_task.h"
-#include "data_packet.h"
-#include "judge_rx_data.h"
-#include "judge_tx_data.h"
-
+#define USART_TEST 1
 extern TaskHandle_t judge_rx_Task_Handle;
 
 UBaseType_t judge_tx_stack_surplus;
 UBaseType_t judge_rx_stack_surplus;
-uint8_t DATA[113] = {"AwakeLion!!!"}; // ¸ÃÊı×éÓÃÀ´´¢´æ»úÆ÷ÈË½»»¥µÄÊı¾İ£¬¿ÉÓÃ»§×ÔĞĞĞŞ¸Ä
+uint8_t DATA[113] = {"AwakeLion!!!"}; // è¯¥æ•°ç»„ç”¨æ¥å‚¨å­˜æœºå™¨äººäº¤äº’çš„æ•°æ®ï¼Œå¯ç”¨æˆ·è‡ªè¡Œä¿®æ”¹
+
+float send_data[6] = {0};
+
+void send_int32(float data[], uint8_t Size);
+void send_byte(uint16_t data);
 void judge_tx_task(void *parm)
 {
+#ifdef USART_TEST
+
+	while (1)
+	{
+		send_int32(send_data, 3);
+		vTaskDelay(2);
+	}
+
+#else
 	uint32_t judge_wake_time = osKernelSysTick();
 	static uint8_t i;
 	while (1)
@@ -55,6 +59,7 @@ void judge_tx_task(void *parm)
 		judge_tx_stack_surplus = uxTaskGetStackHighWaterMark(NULL);
 		vTaskDelayUntil(&judge_wake_time, 100);
 	}
+#endif
 }
 
 void judge_rx_task(void *parm)
@@ -72,37 +77,67 @@ void judge_rx_task(void *parm)
 		{
 			if (Signal & JUDGE_UART_IDLE_SIGNAL)
 			{
-				USART_ClearFlag(USART1, USART_FLAG_IDLE);				  // Çå³ı¿ÕÏĞÖĞ¶Ï±êÖ¾Î»
-				dma_buffer_to_unpack_buffer(&judge_rx_obj, UART_IDLE_IT); // Í¨¹ıÖ¸ÕëÈ¡Ö·µÄ·½·¨°Ñ´®¿Ú½ÓÊÕµÄÊı¾İ·Å½øFIFO
-				unpack_fifo_data(&judge_unpack_obj, DN_REG_ID);			  // Í¬ÑùÔÙÍ¨¹ıÖ¸ÕëÈ¡Ö·µÄ·½·¨°ÑFIFOÀïµÄÊı¾İÄÃ³öÀ´·Å½øÒ»¸öÊı×éÀï
+				USART_ClearFlag(USART1, USART_FLAG_IDLE);				  // æ¸…é™¤ç©ºé—²ä¸­æ–­æ ‡å¿—ä½
+				dma_buffer_to_unpack_buffer(&judge_rx_obj, UART_IDLE_IT); // é€šè¿‡æŒ‡é’ˆå–å€çš„æ–¹æ³•æŠŠä¸²å£æ¥æ”¶çš„æ•°æ®æ”¾è¿›FIFO
+				unpack_fifo_data(&judge_unpack_obj, DN_REG_ID);			  // åŒæ ·å†é€šè¿‡æŒ‡é’ˆå–å€çš„æ–¹æ³•æŠŠFIFOé‡Œçš„æ•°æ®æ‹¿å‡ºæ¥æ”¾è¿›ä¸€ä¸ªæ•°ç»„é‡Œ
 			}
 		}
 		judge_rx_stack_surplus = uxTaskGetStackHighWaterMark(NULL);
 	}
 }
 
-/*USART6 ÖĞ¶Ïº¯Êı*/
+/*USART6 ä¸­æ–­å‡½æ•°*/
 void USART6_IRQHandler(void)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-	if (USART_GetFlagStatus(USART6, USART_FLAG_IDLE) != RESET // ÅĞ¶ÏÊÇ·ñ¿ÕÏĞ×ÜÏß              USART_FLAG_TC
-		&& USART_GetITStatus(USART6, USART_IT_IDLE) != RESET) // ÅĞ¶ÏÊÇ·ñ¿ÕÏĞ×ÜÏßÖĞ¶Ï
+	if (USART_GetFlagStatus(USART6, USART_FLAG_IDLE) != RESET // åˆ¤æ–­æ˜¯å¦ç©ºé—²æ€»çº¿              USART_FLAG_TC
+		&& USART_GetITStatus(USART6, USART_IT_IDLE) != RESET) // åˆ¤æ–­æ˜¯å¦ç©ºé—²æ€»çº¿ä¸­æ–­
 	{
 		USART_ReceiveData(USART6);
-		USART_ClearFlag(USART6, USART_FLAG_IDLE); // Çå³ı¿ÕÏĞÖĞ¶Ï±êÖ¾Î»
+		USART_ClearFlag(USART6, USART_FLAG_IDLE); // æ¸…é™¤ç©ºé—²ä¸­æ–­æ ‡å¿—ä½
 		USART_ClearITPendingBit(USART6, USART_IT_RXNE);
 		err_detector_hook(JUDGE_SYS_OFFLINE);
 
-		if (judge_rx_Task_Handle != NULL) // ±ÜÃâÈÎÎñÃ»À´µÃ¼°´´½¨¾Í·¢ËÍĞÅºÅÁ¿£¬µ¼ÖÂ¿¨ÔÚ¶ÏÑÔ»úÖÆÖĞ
+		if (judge_rx_Task_Handle != NULL) // é¿å…ä»»åŠ¡æ²¡æ¥å¾—åŠåˆ›å»ºå°±å‘é€ä¿¡å·é‡ï¼Œå¯¼è‡´å¡åœ¨æ–­è¨€æœºåˆ¶ä¸­
 		{
 			xTaskNotifyFromISR((TaskHandle_t)judge_rx_Task_Handle,
 							   (uint32_t)JUDGE_UART_IDLE_SIGNAL,
 							   (eNotifyAction)eSetBits,
 							   (BaseType_t *)&xHigherPriorityTaskWoken);
-			/*½øĞĞÉÏÏÂÎÄÇĞ»»*/
+			/*è¿›è¡Œä¸Šä¸‹æ–‡åˆ‡æ¢*/
 			if (xHigherPriorityTaskWoken != pdFALSE)
 				portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 		}
 	}
+}
+
+void send_byte(uint16_t data)
+{
+	// å‡è®¾æœ‰ä¸€ä¸ªå‡½æ•° USART_SendData ç”¨äºå‘é€ä¸€ä¸ªå­—èŠ‚
+	USART_SendData(USART6, data);
+}
+int32_t send_data_arr[6];
+uint16_t send_arr[4];
+void send_int32(float data[], uint8_t Size)
+{
+
+	taskENTER_CRITICAL();
+	for (uint8_t i = 0; i < Size; i++)
+	{
+		float scaled_data = data[i];
+        int32_t int_data = (int32_t)scaled_data;
+
+        send_arr[0] = (uint16_t)(int_data & 0xFFFF);
+        send_arr[1] = (uint16_t)((int_data >> 16) & 0xFFFF);
+		send_data_arr[i]=(send_arr[0]|(send_arr[1]<<16));
+        for (size_t j = 0; j < 2; j++) // ä¿®æ”¹ä¸ºåªå‘é€ä¸¤ä¸ªå­—èŠ‚
+        {
+            while (USART_GetFlagStatus(USART6, USART_FLAG_TXE) == RESET)
+                ;
+            send_byte(send_arr[j]);
+        }
+
+	}
+	taskEXIT_CRITICAL();
 }

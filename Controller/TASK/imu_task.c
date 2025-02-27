@@ -1,6 +1,5 @@
 #include "imu_task.h"
 
-
 #ifndef RAD_TO_ANGLE
 #define RAD_TO_ANGLE 57.295779513082320876798154814105f
 #endif
@@ -11,8 +10,6 @@ extern TaskHandle_t imu_Task_Handle;
 volatile uint8_t imu_start_flag = 0;
 
 extern IMU_Data_t BMI088;
-
-int32_t send_data[6] = {0};
 
 float EulerAngle[3] = {0};
 
@@ -51,10 +48,8 @@ static fp32 INS_quat[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 static fp32 gyro_filter[3] = {0.0f, 0.0f, 0.0f};
 fp32 INS_angle[3] = {0.0f, 0.0f, 0.0f};		  // euler angle, unit rad.??? ?? rad
 fp32 INS_angle_final[3] = {0.0f, 0.0f, 0.0f}; // 转换单位后的角度
+float clc_dt = 0;
 
-void usart_send_32bit(USART_TypeDef *USARTx, uint32_t pData[], uint16_t Size);
-void send_int32(int32_t data[], uint8_t Size);
-void send_byte(uint8_t data);
 void imu_temp_keep(void)
 {
 	PID_Struct_Init(&pid_imu_tmp, imu_pid[0], imu_pid[1], imu_pid[2], 5000, 1000, INIT);
@@ -102,8 +97,9 @@ void imu_task(void const *argu)
 
 	while (1)
 	{
+		BMI088.Last_Accel[2]=BMI088.Accel[2];
 		BMI088_read(BMI088.Gyro, BMI088.Accel, &BMI088.Temperature);
-
+		
 		/* rotate and zero drift */
 		imu_cali_slove(INS_gyro, INS_accel, INS_mag, &BMI088);
 
@@ -148,6 +144,7 @@ void imu_task(void const *argu)
 		gyro_filter[2] = INS_gyro[2];
 #endif
 		dt = DWT_GetDeltaT(&time_last);
+		clc_dt= dt;
 		AHRS_update(INS_quat, dt, gyro_filter, accel_fliter_3, INS_mag);
 		get_angle(INS_quat, INS_angle + INS_YAW_ADDRESS_OFFSET, INS_angle + INS_PITCH_ADDRESS_OFFSET, INS_angle + INS_ROLL_ADDRESS_OFFSET);
 
@@ -159,13 +156,10 @@ void imu_task(void const *argu)
 		send_data[1] = INS_angle_final[1]; // PIT
 		send_data[2] = INS_angle_final[2]; // ROL
 
-		send_data[3] = BMI088.Accel[0]; // 左右
-		send_data[4] = BMI088.Accel[1]; // 前后
-		send_data[5] = BMI088.Accel[2]; // 上下
-
-
-		send_int32(send_data, 6);
-
+//		send_data[3] = BMI088.Accel[0]; // 左右
+//		send_data[4] = BMI088.Accel[1]; // 前后
+//		send_data[5] = BMI088.Accel[2]; // 上下
+		
 		// err_detector_hook(IMU_OFFLINE);
 
 		IWDG_Feed(); // 喂狗
@@ -173,30 +167,3 @@ void imu_task(void const *argu)
 	}
 }
 
-void send_byte(uint8_t data)
-{
-	// 假设有一个函数 USART_SendData 用于发送一个字节
-	USART_SendData(USART6, data);
-}
-uint8_t test_arr[4];
-fp32 receive_test[6];
-void send_int32(int32_t data[], uint8_t Size)
-{
-	// 发送高字节到低字节
-	while (Size > 0U)
-	{
-		Size--;
-		test_arr[0] = (data[Size] >> 0) & 0xFF;
-		test_arr[1] = (data[Size] >> 8) & 0xFF;
-		test_arr[2] = (data[Size] >> 16) & 0xFF;
-		test_arr[3] = (data[Size] >> 24) & 0xFF;
-
-		receive_test[Size] = (fp32)(test_arr[0] | test_arr[1] << 8 | test_arr[2] << 16 | test_arr[3] << 24);
-		for (size_t i = 0; i < 4; i++)
-		{
-			while (USART_GetFlagStatus(USART6, USART_FLAG_TXE) == RESET)
-				;
-			send_byte(test_arr[i]);
-		}
-	}
-}

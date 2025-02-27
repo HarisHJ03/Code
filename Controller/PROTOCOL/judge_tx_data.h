@@ -5,22 +5,22 @@
 #include "stm32f4xx.h"
 #include "data_packet.h"
 
-#define JUDGE_TX_FIFO_BUFLEN 500//ÓÃÓÚ¸ø·¢ËÍÓÊÏäµÄ³õÊ¼»¯
-#define STUDENT_DATA_LENGTH   sizeof(ext_student_interactive_data_t_t)//½»»¥Êı¾İµÄ³¤¶È 
+#define JUDGE_TX_FIFO_BUFLEN 500//ç”¨äºç»™å‘é€é‚®ç®±çš„åˆå§‹åŒ–
+#define STUDENT_DATA_LENGTH   sizeof(ext_student_interactive_data_t_t)//äº¤äº’æ•°æ®çš„é•¿åº¦ 
 
-//»úÆ÷ÈË¼ä½»»¥Êı¾İ°ü
+//æœºå™¨äººé—´äº¤äº’æ•°æ®åŒ…
 typedef __packed struct
 {
-	uint16_t data_cmd_id;//ÄÚÈİID¡¢·¢ËÍÕßID¡¢½ÓÊÜÕßIDºÍ½»»¥Êı¾İ
+	uint16_t data_cmd_id;//å†…å®¹IDã€å‘é€è€…IDã€æ¥å—è€…IDå’Œäº¤äº’æ•°æ®
 	uint16_t sender_ID;
 	uint16_t receiver_ID;
-	uint8_t data[113];//×î´ó113
+	uint8_t data[113];//æœ€å¤§113
 }ext_student_interactive_data_t_t;
 
-//Ñ§Éú½»»¥id
+//å­¦ç”Ÿäº¤äº’id
 typedef enum
 {
-	//Ñ§Éú½»»¥»úÆ÷ÈËid
+	//å­¦ç”Ÿäº¤äº’æœºå™¨äººid
 	STUDENT_RED_HERO_ID       			= 1,
 	STUDENT_RED_ENGINEER_ID	  			= 2,
 	STUDENT_RED_INFANTRY3_ID  			= 3,
@@ -30,8 +30,8 @@ typedef enum
 	STUDENT_RED_SENTRY_ID	    			= 7,
 	STUDENT_RED_RADAR_ID            = 8,
 	STUDENT_RED_RadarStation_ID	    = 9,
-	STUDENT_RED_Outpost_ID	    		= 10,//Ç°ÉÚÕ¾(Ç°ÉÚºÍ»ùµØµÄIDÓÃÓÚĞ¡µØÍ¼½»»¥Êı¾İ)
-	STUDENT_RED_Base_ID	    				= 11,//»ùµØ
+	STUDENT_RED_Outpost_ID	    		= 10,//å‰å“¨ç«™(å‰å“¨å’ŒåŸºåœ°çš„IDç”¨äºå°åœ°å›¾äº¤äº’æ•°æ®)
+	STUDENT_RED_Base_ID	    				= 11,//åŸºåœ°
 	STUDENT_BLUE_HERO_ID	    			= 101,
 	STUDENT_BLUE_ENGINEER_ID  			= 102,
 	STUDENT_BLUE_INFANTRY3_ID 			= 103,
@@ -44,7 +44,7 @@ typedef enum
 	STUDENT_BLUE_Outpost_ID	    		= 110,
 	STUDENT_BLUE_Base_ID	    			= 111,
 	
-	//»úÆ÷ÈË¶ÔÓ¦¿Í»§¶Ëid
+	//æœºå™¨äººå¯¹åº”å®¢æˆ·ç«¯id
 	RED_HERO_CLIENT_ID	      = 0x0101,
 	RED_ENGINEER_CLIENT_ID    = 0x0102,
 	RED_INFANTRY3_CLIENT_ID	  = 0x0103,
@@ -58,24 +58,24 @@ typedef enum
 	BLUE_INFANTRY5_CLIENT_ID  = 0x0169,
 	BLUE_AERIAL_CLIENT_ID	    = 0x016A,	
 	
-	//²ÃÅĞÏµÍ³·şÎñÆ÷£¨ÓÃÓÚÉÚ±øºÍÀ×´ï×ÔÖ÷¾ö²ßÖ¸Áî£©
+	//è£åˆ¤ç³»ç»ŸæœåŠ¡å™¨ï¼ˆç”¨äºå“¨å…µå’Œé›·è¾¾è‡ªä¸»å†³ç­–æŒ‡ä»¤ï¼‰
 	JUDGE_SERVER_ID           = 0x8080,
 }interactive_id_e;
 
-//ÄÚÈİIDºÍÃüÁîID
+//å†…å®¹IDå’Œå‘½ä»¤ID
 typedef enum
 {
-	/*stm32ÊÇĞ¡¶ËÄ£Ê½£¬±ÈÈçÒ»¸ö32Î»ÎŞ·ûºÅÊı0x12345678,
-	´ÓµÍµØÖ·µ½¸ßµØÖ·ÒÀ´Î´æ´¢78¡¢56¡¢34¡¢12
+	/*stm32æ˜¯å°ç«¯æ¨¡å¼ï¼Œæ¯”å¦‚ä¸€ä¸ª32ä½æ— ç¬¦å·æ•°0x12345678,
+	ä»ä½åœ°å€åˆ°é«˜åœ°å€ä¾æ¬¡å­˜å‚¨78ã€56ã€34ã€12
 	
-	32bit¿íµÄÊı0x12345678ÔÚĞ¡¶ËÄ£Ê½¼°´ó¶ËÄ£Ê½CPUÖĞ´æ·ÅµÄ·½Ê½£¨¼ÙÉèµØÖ·´Ó0x4000¿ªÊ¼´æ·Å£©Îª£º
-	ÄÚ´æµØÖ·		Ğ¡¶ËÄ£Ê½´æ·ÅÄÚÈİ		´ó¶ËÄ£Ê½´æ·ÅÄÚÈİ
+	32bitå®½çš„æ•°0x12345678åœ¨å°ç«¯æ¨¡å¼åŠå¤§ç«¯æ¨¡å¼CPUä¸­å­˜æ”¾çš„æ–¹å¼ï¼ˆå‡è®¾åœ°å€ä»0x4000å¼€å§‹å­˜æ”¾ï¼‰ä¸ºï¼š
+	å†…å­˜åœ°å€		å°ç«¯æ¨¡å¼å­˜æ”¾å†…å®¹		å¤§ç«¯æ¨¡å¼å­˜æ”¾å†…å®¹
 	0x4000			0x78								0x12
 	0x4001			0x56								0x34
 	0x4002			0x34								0x56
 	0x4003			0x12								0x78							*/
-	//ÄÚÈİID
-	RobotCommunication														= 0x0200,//¿ÉÒÔÔÚ0x0200~0x02FFÖĞ×ÔĞĞÌí¼ÓÒ»¸ö»ò¶à¸ö×÷Îª½»»¥ID
+	//å†…å®¹ID
+	RobotCommunication														= 0x0200,//å¯ä»¥åœ¨0x0200~0x02FFä¸­è‡ªè¡Œæ·»åŠ ä¸€ä¸ªæˆ–å¤šä¸ªä½œä¸ºäº¤äº’ID
 	Client_Delete_Graph														= 0x0100,
 	Client_Draw_One_Graph													= 0x0101,
 	Client_Draw_Two_Graph													= 0x0102,
@@ -83,10 +83,10 @@ typedef enum
 	Client_Draw_Seven_Graph												= 0x0104,
 	Client_Draw_Character_Graph										= 0x0110,
 	/* NEW */
-	SENTRY_CMD_ID                                 = 0x0120, //ÉÚ±ø×ÔÖ÷¾ö²ßÖ¸Áî
-	RADAR_CMD_ID                                  = 0x0121, //À×´ï×ÔÖ÷¾ö²ßÖ¸Áî
+	SENTRY_CMD_ID                                 = 0x0120, //å“¨å…µè‡ªä¸»å†³ç­–æŒ‡ä»¤
+	RADAR_CMD_ID                                  = 0x0121, //é›·è¾¾è‡ªä¸»å†³ç­–æŒ‡ä»¤
   /* NEW */
-	//ÃüÁîID
+	//å‘½ä»¤ID
 	Robot_communicative_data											= 0x0301,
 	Custom_control_interactive_port								= 0x0302,
 	Client_map_intercactive_data									= 0x0303,
@@ -94,21 +94,21 @@ typedef enum
 	
 }Content_ID;
 
-//¿Í»§¶ËÉ¾³ıÍ¼ĞÎ
+//å®¢æˆ·ç«¯åˆ é™¤å›¾å½¢
 typedef __packed struct
 {
-	uint16_t data_cmd_id;//ÄÚÈİID¡¢·¢ËÍÕßID¡¢½ÓÊÜÕßIDºÍÍ¼ĞÎÉèÖÃ
+	uint16_t data_cmd_id;//å†…å®¹IDã€å‘é€è€…IDã€æ¥å—è€…IDå’Œå›¾å½¢è®¾ç½®
 	uint16_t sender_ID;
 	uint16_t receiver_ID;
 	uint8_t operate_tpye;
 	uint8_t layer;
 }ext_client_custom_graphic_delete_t;
 
-//Í¼ĞÎÊı¾İÅäÖÃ£¬¾ßÌå²é¿´²ÃÅĞÏµÍ³´®¿ÚĞ­Òé¸½Â¼
+//å›¾å½¢æ•°æ®é…ç½®ï¼Œå…·ä½“æŸ¥çœ‹è£åˆ¤ç³»ç»Ÿä¸²å£åè®®é™„å½•
 typedef __packed struct
 {
 	uint8_t graphic_name[3];
-	uint32_t operate_tpye:3;// ÀàĞÍËµÃ÷·û Î»ÓòÃû£ºÎ»Óò³¤¶È,ºóÃæµÄÎ»Óò³¤¶È±íÊ¾¸ÃÎ»ÓòÕ¼ÁË¶àÉÙ¸öÎ»
+	uint32_t operate_tpye:3;// ç±»å‹è¯´æ˜ç¬¦ ä½åŸŸåï¼šä½åŸŸé•¿åº¦,åé¢çš„ä½åŸŸé•¿åº¦è¡¨ç¤ºè¯¥ä½åŸŸå äº†å¤šå°‘ä¸ªä½
 	uint32_t graphic_tpye:3;
 	uint32_t layer:4;
 	uint32_t color:4;
@@ -122,16 +122,16 @@ typedef __packed struct
 	uint32_t end_y:11;
 }graphic_data_struct_t;
 
-//¿Í»§¶Ë»æÖÆÒ»¸öÍ¼ĞÎ
+//å®¢æˆ·ç«¯ç»˜åˆ¶ä¸€ä¸ªå›¾å½¢
 typedef __packed struct
 {
-	uint16_t data_cmd_id;//ÄÚÈİID¡¢·¢ËÍÕßID¡¢½ÓÊÜÕßIDºÍÍ¼ĞÎÉèÖÃ
+	uint16_t data_cmd_id;//å†…å®¹IDã€å‘é€è€…IDã€æ¥å—è€…IDå’Œå›¾å½¢è®¾ç½®
 	uint16_t sender_ID;
 	uint16_t receiver_ID;
 	graphic_data_struct_t grapic_data_struct;
 }ext_client_custom_graphic_single_t;
 
-//¿Í»§¶Ë»æÖÆ¶ş¸öÍ¼ĞÎ
+//å®¢æˆ·ç«¯ç»˜åˆ¶äºŒä¸ªå›¾å½¢
 typedef __packed struct
 {
 	uint16_t data_cmd_id;
@@ -140,7 +140,7 @@ typedef __packed struct
 	graphic_data_struct_t grapic_data_struct[2];
 }ext_client_custom_graphic_double_t;
 
-//¿Í»§¶Ë»æÖÆÎå¸öÍ¼ĞÎ
+//å®¢æˆ·ç«¯ç»˜åˆ¶äº”ä¸ªå›¾å½¢
 typedef __packed struct
 {
 	uint16_t data_cmd_id;
@@ -149,7 +149,7 @@ typedef __packed struct
 	graphic_data_struct_t grapic_data_struct[5];
 }ext_client_custom_graphic_five_t;
 
-//¿Í»§¶Ë»æÖÆÆß¸öÍ¼ĞÎ
+//å®¢æˆ·ç«¯ç»˜åˆ¶ä¸ƒä¸ªå›¾å½¢
 typedef __packed struct
 {
 	uint16_t data_cmd_id;
@@ -158,20 +158,20 @@ typedef __packed struct
 	graphic_data_struct_t grapic_data_struct[7];
 }ext_client_custom_graphic_seven_t;
 
-//¿Í»§¶Ë»æÖÆ×Ö·û
+//å®¢æˆ·ç«¯ç»˜åˆ¶å­—ç¬¦
 typedef __packed struct
 {
 	uint16_t data_cmd_id;
 	uint16_t sender_ID;
 	uint16_t receiver_ID;
 	graphic_data_struct_t grapic_data_struct;
-	uint8_t data[30];//ĞèÒª·¢ËÍµÄ×Ö·ûÄÚÈİ
+	uint8_t data[30];//éœ€è¦å‘é€çš„å­—ç¬¦å†…å®¹
 }ext_client_custom_character_t;
 
-//Í¼ĞÎÉèÖÃ
+//å›¾å½¢è®¾ç½®
 typedef enum
 {
-	//Í¼ĞÎÃüÃû£¬¿É×ÔĞĞÌí¼Ó
+	//å›¾å½¢å‘½åï¼Œå¯è‡ªè¡Œæ·»åŠ 
 	Fric												  =1,
 	DODGE												  =2,
 	SENTRY_line									  =3,
@@ -213,24 +213,24 @@ typedef enum
 	Compensates                   =39,
 	Speed													=40,
 	fps                           =41,
-	//Í¼ĞÎ²Ù×÷
-	Null_operate								=0,//¿Õ²Ù×÷
-	Delete_graph								=1,//É¾³ıÍ¼²ã
-	Delete_all									=2,//É¾³ıËùÓĞ
+	//å›¾å½¢æ“ä½œ
+	Null_operate								=0,//ç©ºæ“ä½œ
+	Delete_graph								=1,//åˆ é™¤å›¾å±‚
+	Delete_all									=2,//åˆ é™¤æ‰€æœ‰
 	
-	Add													=1,//Ôö¼Ó
-	Change											=2,//ĞŞ¸Ä
-	Delete											=3,//É¾³ı
-	//Í¼ĞÎÀàĞÍ
-	Straight_line								=0,//Ö±Ïß
-	Rectangle										=1,//¾ØĞÎ
-	Circle											=2,//ÕûÔ²
-	ellipse											=3,//ÍÖÔ²
-	Circular_arc								=4,//Ô²»¡
-	Floatnumber									=5,//¸¡µãÊı
-	Intnumber										=6,//ÕûĞÎÊı
-	Character										=7,//×Ö·û
-	//Í¼²ãÊı
+	Add													=1,//å¢åŠ 
+	Change											=2,//ä¿®æ”¹
+	Delete											=3,//åˆ é™¤
+	//å›¾å½¢ç±»å‹
+	Straight_line								=0,//ç›´çº¿
+	Rectangle										=1,//çŸ©å½¢
+	Circle											=2,//æ•´åœ†
+	ellipse											=3,//æ¤­åœ†
+	Circular_arc								=4,//åœ†å¼§
+	Floatnumber									=5,//æµ®ç‚¹æ•°
+	Intnumber										=6,//æ•´å½¢æ•°
+	Character										=7,//å­—ç¬¦
+	//å›¾å±‚æ•°
 	layer0											=0,
 	layer1											=1,
 	layer2											=2,
@@ -241,42 +241,42 @@ typedef enum
 	layer7											=7,
 	layer8											=8,
 	layer9											=9,
-	//ÑÕÉ«
-	Redblue											=0,//ºìÀ¶Ö÷É«
-	Yellow											=1,//»ÆÉ«
-	Green												=2,//ÂÌÉ«
-	Orange											=3,//³ÈÉ«
-	Amaranth										=4,//×ÏºìÉ«
-	Pink												=5,//·ÛÉ«
-	Cyan												=6,//ÇàÉ«
-	Black												=7,//ºÚÉ«
-	White												=8,//°×É«
+	//é¢œè‰²
+	Redblue											=0,//çº¢è“ä¸»è‰²
+	Yellow											=1,//é»„è‰²
+	Green												=2,//ç»¿è‰²
+	Orange											=3,//æ©™è‰²
+	Amaranth										=4,//ç´«çº¢è‰²
+	Pink												=5,//ç²‰è‰²
+	Cyan												=6,//é’è‰²
+	Black												=7,//é»‘è‰²
+	White												=8,//ç™½è‰²
 }client_graphic_draw_operate_data_e;
 
-/* 0301ÏÂµÄ0120 */
+/* 0301ä¸‹çš„0120 */
 typedef __packed struct  
 { 
-				uint16_t data_cmd_id;//ÄÚÈİID¡¢·¢ËÍÕßID¡¢½ÓÊÜÕßIDºÍÍ¼ĞÎÉèÖÃ
+				uint16_t data_cmd_id;//å†…å®¹IDã€å‘é€è€…IDã€æ¥å—è€…IDå’Œå›¾å½¢è®¾ç½®
 				uint16_t sender_ID;
 				uint16_t receiver_ID;
-	      uint32_t confirm_rebirth      :  1; // ÊÇ·ñÈ·ÈÏ¶ÁÌõ¸´»î  0 ²»¸´»î/1 ¸´»î
-				uint32_t exchange_rebirth     :  1; // ÊÇ·ñÈ·ÈÏ¶Ò»»¸´»î  0 ²»¶Ò»»/1 ¶Ò»»£¨»¨·Ñ½ğ±Ò£º[ROUNDUP£¨£¨420- ±ÈÈüÊ£ÓàÊ±³¤£©/60£©¡Á80+»úÆ÷ÈËµÈ¼¶¡Á20]½ğ±Ò/1 Ì¨£©
-				uint32_t bullet_number        : 11; // ÏëÒª¶Ò»»µÄ·¢µ¯Á¿  ¿É½«Æä´Ó0ĞŞ¸ÄÖÁX£¬ÔòÏûºÄX½ğ±Ò³É¹¦¶Ò»»XÔÊĞí·¢µ¯Á¿¡£´ËºóÉÚ±ø¿É½«Æä´ÓXĞŞ¸ÄÖÁX+Y
-				uint32_t remote_bullet_times  :  4; // Ô¶³Ì¶Ò»»·¢µ¯Á¿´ÎÊı,¿ªÊ¼Îª0£¬µ¥µ÷µİÔöÇÒÃ¿´Î½öÄÜÔö¼Ó1
-				uint32_t remote_blood_times   :  4; // Ô¶³Ì¶Ò»»ÑªÁ¿µÄÇëÇó´ÎÊı£¬¿ªÊ¼Îª0£¬µ¥µ÷µİÔöÇÒÃ¿´Î½öÄÜÔö¼Ó1 (»¨·Ñ½ğ±Ò£º[50+ROUNDUP£¨£¨420- ±ÈÈüÊ£ÓàÊ±³¤£© /60£©¡Á20]½ğ±Ò/1 ´Î)
-				uint32_t reserved             : 11; // ±£ÁôÎ»
+	      uint32_t confirm_rebirth      :  1; // æ˜¯å¦ç¡®è®¤è¯»æ¡å¤æ´»  0 ä¸å¤æ´»/1 å¤æ´»
+				uint32_t exchange_rebirth     :  1; // æ˜¯å¦ç¡®è®¤å…‘æ¢å¤æ´»  0 ä¸å…‘æ¢/1 å…‘æ¢ï¼ˆèŠ±è´¹é‡‘å¸ï¼š[ROUNDUPï¼ˆï¼ˆ420- æ¯”èµ›å‰©ä½™æ—¶é•¿ï¼‰/60ï¼‰Ã—80+æœºå™¨äººç­‰çº§Ã—20]é‡‘å¸/1 å°ï¼‰
+				uint32_t bullet_number        : 11; // æƒ³è¦å…‘æ¢çš„å‘å¼¹é‡  å¯å°†å…¶ä»0ä¿®æ”¹è‡³Xï¼Œåˆ™æ¶ˆè€—Xé‡‘å¸æˆåŠŸå…‘æ¢Xå…è®¸å‘å¼¹é‡ã€‚æ­¤åå“¨å…µå¯å°†å…¶ä»Xä¿®æ”¹è‡³X+Y
+				uint32_t remote_bullet_times  :  4; // è¿œç¨‹å…‘æ¢å‘å¼¹é‡æ¬¡æ•°,å¼€å§‹ä¸º0ï¼Œå•è°ƒé€’å¢ä¸”æ¯æ¬¡ä»…èƒ½å¢åŠ 1
+				uint32_t remote_blood_times   :  4; // è¿œç¨‹å…‘æ¢è¡€é‡çš„è¯·æ±‚æ¬¡æ•°ï¼Œå¼€å§‹ä¸º0ï¼Œå•è°ƒé€’å¢ä¸”æ¯æ¬¡ä»…èƒ½å¢åŠ 1 (èŠ±è´¹é‡‘å¸ï¼š[50+ROUNDUPï¼ˆï¼ˆ420- æ¯”èµ›å‰©ä½™æ—¶é•¿ï¼‰ /60ï¼‰Ã—20]é‡‘å¸/1 æ¬¡)
+				uint32_t reserved             : 11; // ä¿ç•™ä½
 } sentry_cmd_t;
 /*
-ÔÚÉÚ±ø·¢ËÍ¸Ã×ÓÃüÁîÊ±£¬·şÎñÆ÷½«°´ÕÕ´ÓÏà¶ÔµÍÎ»µ½Ïà¶Ô¸ßÎ»
-µÄÔ­ÔòÒÀ´Î´¦ÀíÕâĞ©Ö¸Áî£¬´¦ÀíÖÁÈ«²¿³É¹¦»ò²»ÄÜ´¦ÀíÎªÖ¹¡£
-¾ÙÀı£ºÈô¶ÓÎé½ğ±ÒÊıÎª 0£¬´ËÊ±ÉÚ±øÕ½Íö£¬¡°ÊÇ·ñÈ·ÈÏ¸´»î¡±
-µÄÖµÎª 1£¬¡°ÊÇ·ñÏëÒª¶Ò»»Á¢¼´¸´»î¡±µÄÖµÎª 1£¬¡°ÏëÒª¶Ò»»
-µÄ·¢µ¯Á¿Öµ¡±Îª 100¡££¨¼Ù¶¨Ö®Ç°ÉÚ±øÎ´¶Ò»»¹ı·¢µ¯Á¿£©ÓÉÓÚ
-´ËÊ±¶ÓÎé½ğ±ÒÊı²»×ãÒÔÊ¹ÉÚ±ø¶Ò»»Á¢¼´¸´»î£¬Ôò·şÎñÆ÷½«»áºö
-ÊÓºóĞøÖ¸Áî£¬µÈ´ıÉÚ±ø·¢ËÍµÄÏÂÒ»×éÖ¸Áî¡£
-bit 21-31£º±£Áô
+åœ¨å“¨å…µå‘é€è¯¥å­å‘½ä»¤æ—¶ï¼ŒæœåŠ¡å™¨å°†æŒ‰ç…§ä»ç›¸å¯¹ä½ä½åˆ°ç›¸å¯¹é«˜ä½
+çš„åŸåˆ™ä¾æ¬¡å¤„ç†è¿™äº›æŒ‡ä»¤ï¼Œå¤„ç†è‡³å…¨éƒ¨æˆåŠŸæˆ–ä¸èƒ½å¤„ç†ä¸ºæ­¢ã€‚
+ä¸¾ä¾‹ï¼šè‹¥é˜Ÿä¼é‡‘å¸æ•°ä¸º 0ï¼Œæ­¤æ—¶å“¨å…µæˆ˜äº¡ï¼Œâ€œæ˜¯å¦ç¡®è®¤å¤æ´»â€
+çš„å€¼ä¸º 1ï¼Œâ€œæ˜¯å¦æƒ³è¦å…‘æ¢ç«‹å³å¤æ´»â€çš„å€¼ä¸º 1ï¼Œâ€œæƒ³è¦å…‘æ¢
+çš„å‘å¼¹é‡å€¼â€ä¸º 100ã€‚ï¼ˆå‡å®šä¹‹å‰å“¨å…µæœªå…‘æ¢è¿‡å‘å¼¹é‡ï¼‰ç”±äº
+æ­¤æ—¶é˜Ÿä¼é‡‘å¸æ•°ä¸è¶³ä»¥ä½¿å“¨å…µå…‘æ¢ç«‹å³å¤æ´»ï¼Œåˆ™æœåŠ¡å™¨å°†ä¼šå¿½
+è§†åç»­æŒ‡ä»¤ï¼Œç­‰å¾…å“¨å…µå‘é€çš„ä¸‹ä¸€ç»„æŒ‡ä»¤ã€‚
+bit 21-31ï¼šä¿ç•™
 */
-/* 0301ÏÂµÄ0121 */
+/* 0301ä¸‹çš„0121 */
 typedef __packed struct
 {
 uint8_t radar_cmd;
@@ -305,11 +305,11 @@ typedef __packed struct
   */
 typedef struct
 {
-	//0x0200~0x02FF·¢ËÍµÄÄÚÈİ
+	//0x0200~0x02FFå‘é€çš„å†…å®¹
   ext_student_interactive_data_t_t	  					ext_student_interactive_data;
 	ext_client_custom_graphic_five_t							ext_client_custom_graphic_long_line;
 	ext_client_custom_character_t									ext_client_custom_character_text;
-	//0x0100~0x0110·¢ËÍµÄÄÚÈİ
+	//0x0100~0x0110å‘é€çš„å†…å®¹
 	ext_client_custom_graphic_delete_t						ext_client_custom_graphic_delete;
 	ext_client_custom_graphic_single_t						ext_client_custom_graphic_single;
 	ext_client_custom_graphic_double_t						ext_client_custom_graphic_double;
@@ -319,15 +319,15 @@ typedef struct
 	ext_client_custom_graphic_five_t							ext_client_custom_graphic_car_line;
 	ext_client_custom_graphic_seven_t							ext_client_custom_graphic_seven;
 	ext_client_custom_character_t									ext_client_custom_character;
-	ext_client_custom_character_t									ext_client_custom_character_chassis;//µ×ÅÌ×´Ì¬
-	ext_client_custom_character_t									ext_client_custom_character_shoot;  //Éä»÷×´Ì¬
-	ext_client_custom_character_t									ext_client_custom_character_gimbal; //ÔÆÌ¨×´Ì¬
-	//0x0120~0x0121·¢ËÍµÄÄÚÈİ
-	sentry_cmd_t                                  sentry_cmd;                         //0x0120 ÉÚ±ø×ÔÖ÷¾ö²ßÖ¸Áî
-	radar_cmd_t                                   radar_cmd;                          //0x0121 À×´ï×ÔÖ÷¾ö²ßÖ¸Áî
-	//0x0307~0x0308·¢ËÍµÄÄÚÈİ
-	map_data_t                                    map_data;                           //0x0307 ·¢ËÍÂ·¾¶×ø±êÊı¾İ    
-	custom_info_t                                 custom_info;                        //0x0308 ¼º·½»úÆ÷ÈË¶Ë·¢ËÍ×Ô¶¨ÒåÏûÏ¢
+	ext_client_custom_character_t									ext_client_custom_character_chassis;//åº•ç›˜çŠ¶æ€
+	ext_client_custom_character_t									ext_client_custom_character_shoot;  //å°„å‡»çŠ¶æ€
+	ext_client_custom_character_t									ext_client_custom_character_gimbal; //äº‘å°çŠ¶æ€
+	//0x0120~0x0121å‘é€çš„å†…å®¹
+	sentry_cmd_t                                  sentry_cmd;                         //0x0120 å“¨å…µè‡ªä¸»å†³ç­–æŒ‡ä»¤
+	radar_cmd_t                                   radar_cmd;                          //0x0121 é›·è¾¾è‡ªä¸»å†³ç­–æŒ‡ä»¤
+	//0x0307~0x0308å‘é€çš„å†…å®¹
+	map_data_t                                    map_data;                           //0x0307 å‘é€è·¯å¾„åæ ‡æ•°æ®    
+	custom_info_t                                 custom_info;                        //0x0308 å·±æ–¹æœºå™¨äººç«¯å‘é€è‡ªå®šä¹‰æ¶ˆæ¯
 } judge_txdata_t;
 
 extern judge_txdata_t judge_send_mesg;
