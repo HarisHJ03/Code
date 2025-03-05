@@ -14,5 +14,6 @@
         "cstdint": "c",
         "controller_task.h": "c",
         "detect_task.h": "c"
-    }
+    },
+    "C_Cpp.dimInactiveRegions": true
 }

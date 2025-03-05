@@ -6,37 +6,37 @@
 #include "pc_rx_data.h"
 
 /*******************************************************************/
-/*²ÃÅĞÏµÍ³ºÍĞ¡µçÄÔµÄ½ÓÊÕÊı¾İºÍ´ò°ü*/
+/*è£åˆ¤ç³»ç»Ÿå’Œå°ç”µè„‘çš„æ¥æ”¶æ•°æ®å’Œæ‰“åŒ…*/
 /*******************************************************************/
 
-/*»ñÈ¡DMA×´Ì¬Êı¾İ*/
+/*è·å–DMAçŠ¶æ€æ•°æ®*/
 static void get_dma_memory_msg(DMA_Stream_TypeDef *dma_stream, uint8_t *mem_id, uint16_t *remain_cnt)
 {
   *mem_id = DMA_GetCurrentMemoryTarget(dma_stream);
-  
+
   *remain_cnt = DMA_GetCurrDataCounter(dma_stream);
 }
 
-//for debug
+// for debug
 int dma_write_len = 0;
 int fifo_overflow = 0;
 /*
-* @ dma_obj £º judge_rx_obj  //³õÊ¼»¯Ê±ÒÑ¾­°Ñ´®¿Ú½ÓÊÕµÄÊı¾İ»º³åÇøµØÖ·¸³¸øÁËjudge_rx_objµÄ³ÉÔ±buff
-*/
+ * @ dma_obj ï¼š judge_rx_obj  //åˆå§‹åŒ–æ—¶å·²ç»æŠŠä¸²å£æ¥æ”¶çš„æ•°æ®ç¼“å†²åŒºåœ°å€èµ‹ç»™äº†judge_rx_objçš„æˆå‘˜buff
+ */
 void dma_buffer_to_unpack_buffer(uart_dma_rxdata_t *dma_obj, uart_it_type_e it_type)
 {
-  int16_t  tmp_len;
-  uint8_t  current_memory_id;
+  int16_t tmp_len;
+  uint8_t current_memory_id;
   uint16_t remain_data_counter;
-  uint8_t  *pdata = dma_obj->buff[0];
-  
+  uint8_t *pdata = dma_obj->buff[0];
+
   get_dma_memory_msg(dma_obj->dma_stream, &current_memory_id, &remain_data_counter);
-  
+
   if (UART_IDLE_IT == it_type)
   {
     if (current_memory_id)
     {
-      dma_obj->write_index = dma_obj->buff_size*2 - remain_data_counter;
+      dma_obj->write_index = dma_obj->buff_size * 2 - remain_data_counter;
     }
     else
     {
@@ -56,18 +56,18 @@ void dma_buffer_to_unpack_buffer(uart_dma_rxdata_t *dma_obj, uart_it_type_e it_t
     }
 #endif
   }
-  
+
   if (dma_obj->write_index < dma_obj->read_index)
   {
-    dma_write_len = dma_obj->buff_size*2 - dma_obj->read_index + dma_obj->write_index;
-    
-    tmp_len = dma_obj->buff_size*2 - dma_obj->read_index;
-    if (tmp_len != fifo_s_puts(dma_obj->data_fifo, &pdata[dma_obj->read_index], tmp_len)) // °ÑÊı¾İ·Å½øFIFO¶ÓÁĞ
+    dma_write_len = dma_obj->buff_size * 2 - dma_obj->read_index + dma_obj->write_index;
+
+    tmp_len = dma_obj->buff_size * 2 - dma_obj->read_index;
+    if (tmp_len != fifo_s_puts(dma_obj->data_fifo, &pdata[dma_obj->read_index], tmp_len)) // æŠŠæ•°æ®æ”¾è¿›FIFOé˜Ÿåˆ—
       fifo_overflow = 1;
     else
       fifo_overflow = 0;
     dma_obj->read_index = 0;
-    
+
     tmp_len = dma_obj->write_index;
     if (tmp_len != fifo_s_puts(dma_obj->data_fifo, &pdata[dma_obj->read_index], tmp_len))
       fifo_overflow = 1;
@@ -78,189 +78,193 @@ void dma_buffer_to_unpack_buffer(uart_dma_rxdata_t *dma_obj, uart_it_type_e it_t
   else
   {
     dma_write_len = dma_obj->write_index - dma_obj->read_index;
-    
+
     tmp_len = dma_obj->write_index - dma_obj->read_index;
     if (tmp_len != fifo_s_puts(dma_obj->data_fifo, &pdata[dma_obj->read_index], tmp_len))
       fifo_overflow = 1;
     else
       fifo_overflow = 0;
-    dma_obj->read_index = (dma_obj->write_index) % (dma_obj->buff_size*2);
+    dma_obj->read_index = (dma_obj->write_index) % (dma_obj->buff_size * 2);
   }
 }
 
-
-static uint8_t* protocol_packet_pack(uint16_t cmd_id, uint8_t *p_data, uint16_t len, uint8_t sof, uint8_t *tx_buf)
+static uint8_t *protocol_packet_pack(uint16_t cmd_id, uint8_t *p_data, uint16_t len, uint8_t sof, uint8_t *tx_buf)
 {
   static uint8_t seq;
-  
+
   uint16_t frame_length = HEADER_LEN + CMD_LEN + len + CRC_LEN;
-  frame_header_t *p_header = (frame_header_t*)tx_buf;
-  
-  p_header->sof          = sof;//Ö¡Í·
-  p_header->data_length  = len;//Êı¾İ³¤¶È
-  
-  
+  frame_header_t *p_header = (frame_header_t *)tx_buf;
+
+  p_header->sof = sof;         // å¸§å¤´
+  p_header->data_length = len; // æ•°æ®é•¿åº¦
+
   if (sof == UP_REG_ID)
   {
     if (seq++ >= 255)
       seq = 0;
-    
+
     p_header->seq = seq;
   }
   else
   {
-    p_header->seq = 0;//°üĞòºÅ
+    p_header->seq = 0; // åŒ…åºå·
   }
-  
-  
-  memcpy(&tx_buf[HEADER_LEN], (uint8_t*)&cmd_id, CMD_LEN);//¸´ÖÆcmd_id
-  append_crc8_check_sum(tx_buf, HEADER_LEN);//½øĞĞCRC8¼ìÑé
-  memcpy(&tx_buf[HEADER_LEN + CMD_LEN], p_data, len);//¸´ÖÆÊı¾İÄÚÈİ
-  append_crc16_check_sum(tx_buf, frame_length);//½øĞĞCRC16¼ìÑé
-  
-  return tx_buf;//·µ»ØÍêÕûµÄÊı¾İÖ¡
+
+  memcpy(&tx_buf[HEADER_LEN], (uint8_t *)&cmd_id, CMD_LEN); // å¤åˆ¶cmd_id
+  append_crc8_check_sum(tx_buf, HEADER_LEN);                // è¿›è¡ŒCRC8æ£€éªŒ
+  memcpy(&tx_buf[HEADER_LEN + CMD_LEN], p_data, len);       // å¤åˆ¶æ•°æ®å†…å®¹
+  append_crc16_check_sum(tx_buf, frame_length);             // è¿›è¡ŒCRC16æ£€éªŒ
+
+  return tx_buf; // è¿”å›å®Œæ•´çš„æ•°æ®å¸§
 }
 
 void data_packet_pack(uint16_t cmd_id, uint8_t *p_data, uint16_t len, uint8_t sof)
 {
   uint8_t tx_buf[PROTOCAL_FRAME_MAX_SIZE];
-	static uint8_t a[119];
-  
-  uint16_t frame_length = HEADER_LEN + CMD_LEN + len + CRC_LEN;//·¢ËÍÄÇ¸öÊı¾İ°üµÄ×Ü³¤¶È
-  
-  protocol_packet_pack(cmd_id, p_data, len, sof, tx_buf);//½«Êı¾İ½øĞĞ´ò°ü£¬×é³ÉÒ»¸öÍêÕûµÄÊı¾İÖ¡
-	memcpy(a,tx_buf,frame_length);//²é¿´·¢ËÍµÄÍêÕûÊı¾İ£¬±ãÓÚdebug²é¿´Êı¾İÊÇ·ñÂÒÂë
-  
+  static uint8_t a[119];
+
+  uint16_t frame_length = HEADER_LEN + CMD_LEN + len + CRC_LEN; // å‘é€é‚£ä¸ªæ•°æ®åŒ…çš„æ€»é•¿åº¦
+
+  protocol_packet_pack(cmd_id, p_data, len, sof, tx_buf); // å°†æ•°æ®è¿›è¡Œæ‰“åŒ…ï¼Œç»„æˆä¸€ä¸ªå®Œæ•´çš„æ•°æ®å¸§
+  memcpy(a, tx_buf, frame_length);                        // æŸ¥çœ‹å‘é€çš„å®Œæ•´æ•°æ®ï¼Œä¾¿äºdebugæŸ¥çœ‹æ•°æ®æ˜¯å¦ä¹±ç 
+
   /* use mutex operation */
   if (sof == UP_REG_ID)
   {
     fifo_s_puts(&pc_txdata_fifo, tx_buf, frame_length);
   }
   else if (sof == DN_REG_ID)
-    fifo_s_puts(&judge_txdata_fifo, tx_buf, frame_length);//½«Êı¾İ´Ótx_buf·Åµ½judge_txdata_fifo
+    fifo_s_puts(&judge_txdata_fifo, tx_buf, frame_length); // å°†æ•°æ®ä»tx_bufæ”¾åˆ°judge_txdata_fifo
   else
-    return ;
+    return;
 }
 
 /*
-* @p_obj£ºjudge_unpack_obj
-* @sof£º DN_REG_ID
-*/
+ * @p_objï¼šjudge_unpack_obj
+ * @sofï¼š DN_REG_ID
+ */
 
 void unpack_fifo_data(unpack_data_t *p_obj, uint8_t sof)
 {
   uint8_t byte = 0;
-  
-  while ( fifo_used_count(p_obj->data_fifo) )
+
+  while (fifo_used_count(p_obj->data_fifo))
   {
     byte = fifo_s_get(p_obj->data_fifo);
-    switch(p_obj->unpack_step)
+    switch (p_obj->unpack_step)
     {
-      case STEP_HEADER_SOF:
+    case STEP_HEADER_SOF:
+    {
+      if (byte == sof)
       {
-        if(byte == sof)
-        {
-          p_obj->unpack_step = STEP_LENGTH_LOW;
-          p_obj->protocol_packet[p_obj->index++] = byte;
-        }
-        else
-        {
-          p_obj->index = 0;
-        }
-      }break;
-      
-      case STEP_LENGTH_LOW:
-      {
-        p_obj->data_len = byte;
+        p_obj->unpack_step = STEP_LENGTH_LOW;
         p_obj->protocol_packet[p_obj->index++] = byte;
-        p_obj->unpack_step = STEP_LENGTH_HIGH;
-      }break;
-      
-      case STEP_LENGTH_HIGH:
+      }
+      else
       {
-        p_obj->data_len |= (byte << 8);
-        p_obj->protocol_packet[p_obj->index++] = byte;
+        p_obj->index = 0;
+      }
+    }
+    break;
 
-        if(p_obj->data_len < (PROTOCAL_FRAME_MAX_SIZE - HEADER_LEN - CRC_LEN))
-        {
-          p_obj->unpack_step = STEP_FRAME_SEQ;
-        }
-        else
-        {
-          p_obj->unpack_step = STEP_HEADER_SOF;
-          p_obj->index = 0;
-        }
-      }break;
-    
-      case STEP_FRAME_SEQ:
+    case STEP_LENGTH_LOW:
+    {
+      p_obj->data_len = byte;
+      p_obj->protocol_packet[p_obj->index++] = byte;
+      p_obj->unpack_step = STEP_LENGTH_HIGH;
+    }
+    break;
+
+    case STEP_LENGTH_HIGH:
+    {
+      p_obj->data_len |= (byte << 8);
+      p_obj->protocol_packet[p_obj->index++] = byte;
+
+      if (p_obj->data_len < (PROTOCAL_FRAME_MAX_SIZE - HEADER_LEN - CRC_LEN))
       {
-        p_obj->protocol_packet[p_obj->index++] = byte;
-        p_obj->unpack_step = STEP_HEADER_CRC8;
-      }break;
-
-      case STEP_HEADER_CRC8:
-      {
-        p_obj->protocol_packet[p_obj->index++] = byte;
-
-        if (p_obj->index == HEADER_LEN)
-        {
-          if ( verify_crc8_check_sum(p_obj->protocol_packet, HEADER_LEN) )
-          {
-            p_obj->unpack_step = STEP_DATA_CRC16;
-          }
-          else
-          {
-            p_obj->unpack_step = STEP_HEADER_SOF;
-            p_obj->index = 0;
-          }
-        }
-      }break;  
-
-      case STEP_DATA_CRC16:
-      {
-        if (p_obj->index < (HEADER_LEN + CMD_LEN + p_obj->data_len + CRC_LEN))
-        {
-           p_obj->protocol_packet[p_obj->index++] = byte;  
-        }
-        if (p_obj->index >= (HEADER_LEN + CMD_LEN + p_obj->data_len + CRC_LEN))
-        {
-          p_obj->unpack_step = STEP_HEADER_SOF;
-          p_obj->index = 0;
-
-          if ( verify_crc16_check_sum(p_obj->protocol_packet, HEADER_LEN + CMD_LEN + p_obj->data_len + CRC_LEN) )
-          {
-            if (sof == UP_REG_ID)
-            {
-              pc_data_handler(p_obj->protocol_packet);
-            }
-            else  //DN_REG_ID
-            {
-              judgement_data_handler(p_obj->protocol_packet);
-            }
-          }
-        }
-      }break;
-
-      default:
+        p_obj->unpack_step = STEP_FRAME_SEQ;
+      }
+      else
       {
         p_obj->unpack_step = STEP_HEADER_SOF;
         p_obj->index = 0;
-      }break;
+      }
+    }
+    break;
+
+    case STEP_FRAME_SEQ:
+    {
+      p_obj->protocol_packet[p_obj->index++] = byte;
+      p_obj->unpack_step = STEP_HEADER_CRC8;
+    }
+    break;
+
+    case STEP_HEADER_CRC8:
+    {
+      p_obj->protocol_packet[p_obj->index++] = byte;
+
+      if (p_obj->index == HEADER_LEN)
+      {
+        if (verify_crc8_check_sum(p_obj->protocol_packet, HEADER_LEN))
+        {
+          p_obj->unpack_step = STEP_DATA_CRC16;
+        }
+        else
+        {
+          p_obj->unpack_step = STEP_HEADER_SOF;
+          p_obj->index = 0;
+        }
+      }
+    }
+    break;
+
+    case STEP_DATA_CRC16:
+    {
+      if (p_obj->index < (HEADER_LEN + CMD_LEN + p_obj->data_len + CRC_LEN))
+      {
+        p_obj->protocol_packet[p_obj->index++] = byte;
+      }
+      if (p_obj->index >= (HEADER_LEN + CMD_LEN + p_obj->data_len + CRC_LEN))
+      {
+        p_obj->unpack_step = STEP_HEADER_SOF;
+        p_obj->index = 0;
+
+        if (verify_crc16_check_sum(p_obj->protocol_packet, HEADER_LEN + CMD_LEN + p_obj->data_len + CRC_LEN))
+        {
+          if (sof == UP_REG_ID)
+          {
+            pc_data_handler(p_obj->protocol_packet);
+          }
+          else // DN_REG_ID
+          {
+            judgement_data_handler(p_obj->protocol_packet);
+          }
+        }
+      }
+    }
+    break;
+
+    default:
+    {
+      p_obj->unpack_step = STEP_HEADER_SOF;
+      p_obj->index = 0;
+    }
+    break;
     }
   }
 }
 
-
 /************************************************************************/
-/*²ÃÅĞÏµÍ³ºÍĞ¡µçÄÔµÄ·¢ËÍ*/
+/*è£åˆ¤ç³»ç»Ÿå’Œå°ç”µè„‘çš„å‘é€*/
 /************************************************************************/
 
-static void usart_send_data(USART_TypeDef* USARTx,uint8_t *pData, uint16_t Size)
+static void usart_send_data(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
 {
-  while(Size > 0U)
+  while (Size > 0U)
   {
     Size--;
-		while((USARTx->SR&USART_FLAG_TXE)!=USART_FLAG_TXE);//ÅĞ¶ÏÊı¾İÊÇ·ñ·¢ËÍÍê³É
+    while ((USARTx->SR & USART_FLAG_TXE) != USART_FLAG_TXE)
+      ; // åˆ¤æ–­æ•°æ®æ˜¯å¦å‘é€å®Œæˆ
     USARTx->DR = (*pData++ & (uint8_t)0xFF);
   }
 }
@@ -269,31 +273,30 @@ static void usart_send_data(USART_TypeDef* USARTx,uint8_t *pData, uint16_t Size)
 uint32_t send_packed_fifo_data(fifo_s_t *pfifo, uint8_t sof)
 {
 #if (JUDGE_TX_FIFO_BUFLEN > PC_TX_FIFO_BUFLEN)
-  uint8_t  tx_buf[JUDGE_TX_FIFO_BUFLEN];
+  uint8_t tx_buf[JUDGE_TX_FIFO_BUFLEN];
 #else
-  uint8_t  tx_buf[PC_TX_FIFO_BUFLEN];
+  uint8_t tx_buf[PC_TX_FIFO_BUFLEN];
 #endif
-  
+
   uint32_t fifo_count = fifo_used_count(pfifo);
-  
+
   if (fifo_count)
   {
-    fifo_s_gets(pfifo, tx_buf, fifo_count);//½«Êı¾İ×ªÒÆµ½tx_buf
-    
-    if (sof == UP_REG_ID){
-			#ifdef USE_USB_OTG_FS
-				APP_FOPS.pIf_DataTx(tx_buf,fifo_count);
-			#else
-				usart_send_data(USART1, tx_buf, fifo_count);
-			#endif
-		}
+    fifo_s_gets(pfifo, tx_buf, fifo_count); // å°†æ•°æ®è½¬ç§»åˆ°tx_buf
+
+    if (sof == UP_REG_ID)
+    {
+#ifdef USE_USB_OTG_FS
+      APP_FOPS.pIf_DataTx(tx_buf, fifo_count);
+#else
+      usart_send_data(USART1, tx_buf, fifo_count);
+#endif
+    }
     else if (sof == DN_REG_ID)
-      usart_send_data(USART6, tx_buf, fifo_count);//Í¨¹ı¼Ä´æÆ÷·¢ËÍÊı¾İ
+      usart_send_data(USART6, tx_buf, fifo_count); // é€šè¿‡å¯„å­˜å™¨å‘é€æ•°æ®
     else
       return 0;
   }
-  
+
   return fifo_count;
 }
-
-

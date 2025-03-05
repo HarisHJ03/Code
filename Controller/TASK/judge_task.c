@@ -1,6 +1,6 @@
 #include "judge_task.h"
 
-#define USART_TEST 1
+#define CONTROLLER_FLAG 1
 extern TaskHandle_t judge_rx_Task_Handle;
 
 UBaseType_t judge_tx_stack_surplus;
@@ -13,7 +13,7 @@ void send_int32(float data[], uint8_t Size);
 void send_byte(uint16_t data);
 void judge_tx_task(void *parm)
 {
-#ifdef USART_TEST
+#ifdef CONTROLLER_FLAG
 
 	while (1)
 	{
